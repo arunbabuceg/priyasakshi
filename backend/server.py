@@ -20,9 +20,14 @@ from emergentintegrations.payments.stripe.checkout import (
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
-mongo_url = os.environ["MONGO_URL"]
+mongo_url = os.environ.get("MONGO_URL")
+if not mongo_url:
+    raise RuntimeError("MONGO_URL is not set. Configure it in your environment or .env file.")
+
+DB_NAME = os.environ.get("DB_NAME", "lakshmi_sakshi")
+
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ["DB_NAME"]]
+db = client[DB_NAME]
 
 STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY", "sk_test_emergent")
 CURRENCY = "inr"
@@ -556,10 +561,16 @@ async def contact(payload: ContactMessage):
 
 app.include_router(api_router)
 
+_cors_env = os.environ.get("CORS_ORIGINS", "*").strip()
+if _cors_env == "*" or not _cors_env:
+    _cors_origins = ["*"]
+else:
+    _cors_origins = [o.strip().rstrip("/") for o in _cors_env.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
+    allow_credentials=False if _cors_origins == ["*"] else True,
+    allow_origins=_cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

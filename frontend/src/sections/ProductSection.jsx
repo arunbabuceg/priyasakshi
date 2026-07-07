@@ -22,8 +22,11 @@ const ProductSection = ({
         let mounted = true;
         setLoading(true);
         fetchProducts(category)
-            .then((data) => mounted && setProducts(data))
-            .catch(() => {})
+            .then((data) => {
+                if (!mounted) return;
+                setProducts(Array.isArray(data) ? data : []);
+            })
+            .catch(() => mounted && setProducts([]))
             .finally(() => mounted && setLoading(false));
         return () => {
             mounted = false;

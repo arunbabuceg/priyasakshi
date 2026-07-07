@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Sprout, Leaf } from "lucide-react";
-import { api } from "../lib/api";
+import { fetchIngredients } from "../lib/api";
 
 const Ingredients = () => {
     const [items, setItems] = useState([]);
     const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
-        api.get("/ingredients")
-            .then(({ data }) => setItems(data.ingredients || []))
-            .catch(() => {});
+        let mounted = true;
+        fetchIngredients()
+            .then((list) => {
+                if (!mounted) return;
+                setItems(Array.isArray(list) ? list : []);
+            })
+            .catch(() => mounted && setItems([]));
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     const visible = expanded ? items : items.slice(0, 24);

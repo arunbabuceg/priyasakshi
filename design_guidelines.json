@@ -1,0 +1,94 @@
+{
+  "brand": {
+    "name": "Lakshmi Sakshi",
+    "sub_brands": ["Garden Glow", "Tamarai by Priyasakshi"],
+    "theme": "Light",
+    "archetype": "Organic & Earthy",
+    "ui_style": "Claymorphism"
+  },
+  "colors": {
+    "background": "#FAF7F2",
+    "primary": "#D17B67",
+    "secondary": "#D4A373",
+    "accent": "#8A9A5B",
+    "deep_accent": "#8B2956",
+    "text_dark": "#2E2825",
+    "card_bg": "#FFFFFF",
+    "shadow_color_outer": "rgba(138, 115, 104, 0.15)"
+  },
+  "typography": {
+    "heading_font": "Cormorant Garamond",
+    "body_font": "Outfit",
+    "rules": {
+      "h1": "text-5xl sm:text-6xl tracking-tight text-[#8B2956] font-serif",
+      "h2": "text-3xl sm:text-4xl tracking-tight text-[#2E2825] font-serif",
+      "body": "text-base leading-relaxed text-[#2E2825]/80 font-sans"
+    }
+  },
+  "claymorphism_rules": {
+    "card_class": "bg-white rounded-[32px] shadow-[0_35px_68px_rgba(138,115,104,0.15),inset_0_-8px_16px_rgba(138,115,104,0.1),inset_0_8px_16px_rgba(255,255,255,0.8)]",
+    "button_primary_class": "bg-[#D17B67] text-white font-bold rounded-[24px] shadow-[0_12px_24px_rgba(209,123,103,0.3),inset_0_-4px_8px_rgba(139,41,86,0.2),inset_0_4px_8px_rgba(255,255,255,0.6)] transition-transform duration-150 active:translate-y-[2px] active:scale-95",
+    "button_secondary_class": "bg-[#8A9A5B] text-white font-bold rounded-[24px] shadow-[0_12px_24px_rgba(138,154,91,0.3),inset_0_-4px_8px_rgba(50,70,30,0.2),inset_0_4px_8px_rgba(255,255,255,0.6)] transition-transform duration-150 active:translate-y-[2px] active:scale-95",
+    "decorations": "Use floating decorative clay ornaments (leaves, lotus petals, blob shapes) in the background. Shapes should have similar soft inset shadows."
+  },
+  "layout": {
+    "spacing": "Generous spacing. Use p-8, p-12, py-24 for sections. Containers must have internal padding.",
+    "grid": "Bento Grid (Mode A) for About/Story section to maintain asymmetry.",
+    "hero": "Split layout with a large rounded claymorphism container. Include brand name, tagline (heritage + handcrafted goods), and a claymorphism button.",
+    "navigation": "Sticky top navigation using glassmorphism (backdrop-blur-xl bg-[#FAF7F2]/80) combined with a claymorphism cart badge/button.",
+    "cart": "Persistent floating cart icon with a slide-over drawer (using Shadcn Sheet)."
+  },
+  "components": {
+    "instructions_to_main_agent": [
+      "Use Tailwind CSS for layout, colors, and claymorphism shadows.",
+      "Use custom HTML/Tailwind for product grids, hero section, and about sections.",
+      "Use Shadcn UI for complex interactions: Sheet/Drawer for the sliding cart, Dialog for product details modal, and Form for checkout.",
+      "Implement a single-page scrolling structure with separate sections for Silk Sarees and Skincare (Garden Glow).",
+      "Include a full Stripe checkout flow with a shipping form and Success/Cancel pages.",
+      "Add Framer Motion for micro-animations: float, tilt on hover for product cards, and a cart bounce effect.",
+      "Provide testing attributes: All interactive elements MUST include data-testid.",
+      "Ensure product photography is large, clear, and serves as the visual hero of the product cards.",
+      "DO NOT USE TYPESCRIPT. Provide all files in .js / .jsx formats."
+    ]
+  },
+  "media": {
+    "hero_image": "https://images.unsplash.com/photo-1716504628105-bd76d91e85f2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxNzV8MHwxfHNlYXJjaHwyfHxpbmRpYW4lMjB3b21hbiUyMHdlYXJpbmclMjBzYXJlZSUyMHBvcnRyYWl0fGVufDB8fHx8MTc4MzQxOTM1MXww&ixlib=rb-4.1.0&q=85",
+    "saree_products": [
+      {
+        "name": "Magenta & Olive Heritage Saree",
+        "image": "https://customer-assets.emergentagent.com/job_18200c57-2ee7-4069-8631-396ac96bb510/artifacts/pajd7p83_WhatsApp%20Image%202026-07-07%20at%203.34.01%20PM%20%281%29.webp"
+      },
+      {
+        "name": "Blue & Yellow Handloom Saree",
+        "image": "https://images.unsplash.com/photo-1610189012906-4c0aa9b9781e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwzfHx0cmFkaXRpb25hbCUyMGluZGlhbiUyMHNpbGslMjBzYXJlZSUyMGhhbmRsb29tfGVufDB8fHx8MTc4MzQxOTM1MXww&ixlib=rb-4.1.0&q=85"
+      },
+      {
+        "name": "Yellow & Red Kanchipuram Saree",
+        "image": "https://images.unsplash.com/photo-1597897569252-9df44c7de0db?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwxfHx0cmFkaXRpb25hbCUyMGluZGlhbiUyMHNpbGslMjBzYXJlZSUyMGhhbmRsb29tfGVufDB8fHx8MTc4MzQxOTM1MXww&ixlib=rb-4.1.0&q=85"
+      }
+    ],
+    "skincare_products": [
+      {
+        "name": "Tamarai Hair Oil",
+        "image": "https://customer-assets.emergentagent.com/job_18200c57-2ee7-4069-8631-396ac96bb510/artifacts/xhzryqin_WhatsApp%20Image%202026-07-07%20at%203.32.51%20PM.jpeg"
+      },
+      {
+        "name": "Orithal Tamarai Powder",
+        "image": "https://customer-assets.emergentagent.com/job_18200c57-2ee7-4069-8631-396ac96bb510/artifacts/ixm6ndc4_WhatsApp%20Image%202026-07-07%20at%203.32.52%20PM%20%281%29.jpeg"
+      },
+      {
+        "name": "Ganga Tulasi Serum",
+        "image": "https://customer-assets.emergentagent.com/job_18200c57-2ee7-4069-8631-396ac96bb510/artifacts/5j4zouim_WhatsApp%20Image%202026-07-07%20at%203.32.49%20PM%20%281%29.jpeg"
+      },
+      {
+        "name": "Krishna Kranthi Hydrating Oil",
+        "image": "https://customer-assets.emergentagent.com/job_18200c57-2ee7-4069-8631-396ac96bb510/artifacts/3zmus17t_WhatsApp%20Image%202026-07-07%20at%203.32.49%20PM%20%283%29.jpeg"
+      },
+      {
+        "name": "Garden Glow Herbal Blend",
+        "image": "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwxfHxuYXR1cmFsJTIwb3JnYW5pYyUyMHNraW5jYXJlJTIwaGVyYnMlMjBvaWxzfGVufDB8fHx8MTc4MzQxOTM1MXww&ixlib=rb-4.1.0&q=85"
+      }
+    ],
+    "about_image": "https://images.unsplash.com/photo-17040982/pexels-photo-17040982.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+  }
+}

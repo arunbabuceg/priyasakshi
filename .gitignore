@@ -22,3 +22,9 @@ __pycache__
 # Python venvs
 .venv
 venv
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials

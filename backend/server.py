@@ -10,12 +10,7 @@ from typing import List, Optional, Dict
 import uuid
 from datetime import datetime, timezone
 
-from emergentintegrations.payments.stripe.checkout import (
-    StripeCheckout,
-    CheckoutSessionResponse,
-    CheckoutStatusResponse,
-    CheckoutSessionRequest,
-)
+
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -29,7 +24,6 @@ DB_NAME = os.environ.get("DB_NAME", "lakshmi_sakshi")
 client = AsyncIOMotorClient(mongo_url)
 db = client[DB_NAME]
 
-STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY", "sk_test_emergent")
 CURRENCY = "inr"
 FREE_SHIPPING_THRESHOLD = 5000.0
 FLAT_SHIPPING_FEE = 99.0
@@ -62,30 +56,8 @@ class CartItem(BaseModel):
     quantity: int
 
 
-class CheckoutRequest(BaseModel):
-    items: List[CartItem]
-    origin_url: str
-    customer_name: str
-    customer_email: EmailStr
-    shipping_address: str
-    shipping_city: str
-    shipping_state: str
-    shipping_postal_code: str
-    shipping_country: str
-    phone: Optional[str] = None
 
 
-class CheckoutSessionResp(BaseModel):
-    url: str
-    session_id: str
-
-
-class PaymentStatusResp(BaseModel):
-    status: str
-    payment_status: str
-    amount_total: float
-    currency: str
-    order_id: Optional[str] = None
 
 
 # ---------------------- Herbal Ingredients (103 herbs in Tamarai oil) ----------------------
@@ -305,216 +277,6 @@ async def get_product(product_id: str):
 async def get_ingredients():
     return {"count": len(HERBAL_INGREDIENTS), "ingredients": HERBAL_INGREDIENTS}
 
-
-def _compute_totals(items: List[CartItem]):
-    subtotal = 0.0
-    line_items = []
-    for it in items:
-        if it.quantity <= 0:
-            continue
-        p = PRODUCT_MAP.get(it.product_id)
-        if not p:
-            raise HTTPException(status_code=400, detail=f"Invalid product {it.product_id}")
-        line_total = round(p.price * it.quantity, 2)
-        subtotal += line_total
-        line_items.append(
-            {
-                "product_id": p.id,
-                "name": p.name,
-                "unit_price": p.price,
-                "quantity": it.quantity,
-                "line_total": line_total,
-                "image": p.image,
-            }
-        )
-    subtotal = round(subtotal, 2)
-    shipping = 0.0 if subtotal >= FREE_SHIPPING_THRESHOLD else FLAT_SHIPPING_FEE
-    total = round(subtotal + shipping, 2)
-    return line_items, subtotal, shipping, total
-
-
-@api_router.post("/checkout/session", response_model=CheckoutSessionResp)
-async def create_checkout(payload: CheckoutRequest, request: Request):
-    if not payload.items:
-        raise HTTPException(status_code=400, detail="Cart is empty")
-
-    line_items, subtotal, shipping, total = _compute_totals(payload.items)
-    if total <= 0:
-        raise HTTPException(status_code=400, detail="Invalid order total")
-
-    order_id = str(uuid.uuid4())
-
-    origin = payload.origin_url.rstrip("/")
-    success_url = f"{origin}/success?session_id={{CHECKOUT_SESSION_ID}}"
-    cancel_url = f"{origin}/cancel"
-
-    host_url = str(request.base_url)
-    webhook_url = f"{host_url.rstrip('/')}/api/webhook/stripe"
-
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
-
-    metadata = {
-        "order_id": order_id,
-        "customer_email": payload.customer_email,
-        "customer_name": payload.customer_name,
-        "source": "lakshmi_sakshi_web",
-    }
-
-    checkout_req = CheckoutSessionRequest(
-        amount=float(total),
-        currency=CURRENCY,
-        success_url=success_url,
-        cancel_url=cancel_url,
-        metadata=metadata,
-    )
-
-    try:
-        session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_req)
-    except Exception as e:
-        logging.exception("Stripe checkout creation failed")
-        raise HTTPException(status_code=500, detail=f"Payment provider error: {e}")
-
-    order_doc = {
-        "id": order_id,
-        "session_id": session.session_id,
-        "customer_name": payload.customer_name,
-        "customer_email": payload.customer_email,
-        "phone": payload.phone,
-        "shipping": {
-            "address": payload.shipping_address,
-            "city": payload.shipping_city,
-            "state": payload.shipping_state,
-            "postal_code": payload.shipping_postal_code,
-            "country": payload.shipping_country,
-        },
-        "items": line_items,
-        "subtotal": subtotal,
-        "shipping_fee": shipping,
-        "total": total,
-        "currency": CURRENCY,
-        "status": "pending",
-        "payment_status": "initiated",
-        "created_at": now_iso(),
-        "updated_at": now_iso(),
-    }
-    await db.orders.insert_one(order_doc)
-
-    txn_doc = {
-        "id": str(uuid.uuid4()),
-        "order_id": order_id,
-        "session_id": session.session_id,
-        "amount": total,
-        "currency": CURRENCY,
-        "metadata": metadata,
-        "payment_status": "initiated",
-        "status": "pending",
-        "created_at": now_iso(),
-        "updated_at": now_iso(),
-    }
-    await db.payment_transactions.insert_one(txn_doc)
-
-    return CheckoutSessionResp(url=session.url, session_id=session.session_id)
-
-
-@api_router.get("/checkout/status/{session_id}", response_model=PaymentStatusResp)
-async def get_checkout_status(session_id: str, request: Request):
-    txn = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
-    if not txn:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    if txn.get("payment_status") == "paid":
-        return PaymentStatusResp(
-            status=txn.get("status", "complete"),
-            payment_status="paid",
-            amount_total=float(txn.get("amount", 0)),
-            currency=txn.get("currency", CURRENCY),
-            order_id=txn.get("order_id"),
-        )
-
-    host_url = str(request.base_url)
-    webhook_url = f"{host_url.rstrip('/')}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
-
-    try:
-        status: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
-    except Exception as e:
-        logging.exception("Stripe status fetch failed")
-        raise HTTPException(status_code=500, detail=f"Payment provider error: {e}")
-
-    new_status = status.status
-    new_payment_status = status.payment_status
-
-    if txn.get("payment_status") != "paid":
-        await db.payment_transactions.update_one(
-            {"session_id": session_id},
-            {
-                "$set": {
-                    "status": new_status,
-                    "payment_status": new_payment_status,
-                    "updated_at": now_iso(),
-                }
-            },
-        )
-        await db.orders.update_one(
-            {"session_id": session_id},
-            {
-                "$set": {
-                    "status": new_status,
-                    "payment_status": new_payment_status,
-                    "updated_at": now_iso(),
-                }
-            },
-        )
-
-    return PaymentStatusResp(
-        status=new_status,
-        payment_status=new_payment_status,
-        amount_total=float(status.amount_total) / 100.0,
-        currency=status.currency,
-        order_id=txn.get("order_id"),
-    )
-
-
-@api_router.post("/webhook/stripe")
-async def stripe_webhook(request: Request):
-    body = await request.body()
-    signature = request.headers.get("Stripe-Signature", "")
-    host_url = str(request.base_url)
-    webhook_url = f"{host_url.rstrip('/')}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
-
-    try:
-        event = await stripe_checkout.handle_webhook(body, signature)
-    except Exception as e:
-        logging.exception("Webhook parsing failed")
-        raise HTTPException(status_code=400, detail=str(e))
-
-    session_id = event.session_id
-    if session_id:
-        existing = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
-        if existing and existing.get("payment_status") != "paid":
-            await db.payment_transactions.update_one(
-                {"session_id": session_id},
-                {
-                    "$set": {
-                        "payment_status": event.payment_status,
-                        "status": "complete" if event.payment_status == "paid" else existing.get("status"),
-                        "updated_at": now_iso(),
-                    }
-                },
-            )
-            await db.orders.update_one(
-                {"session_id": session_id},
-                {
-                    "$set": {
-                        "payment_status": event.payment_status,
-                        "status": "complete" if event.payment_status == "paid" else "pending",
-                        "updated_at": now_iso(),
-                    }
-                },
-            )
-
-    return {"received": True}
 
 
 # ---------------------- Newsletter ----------------------

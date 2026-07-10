@@ -5,10 +5,10 @@
 :root {
     --ls-bg: #faf7f2;
     --ls-cream: #f3ebdc;
-    --ls-primary: #d17b67; /* terracotta */
-    --ls-secondary: #d4a373; /* ochre */
-    --ls-accent: #8a9a5b; /* olive */
-    --ls-deep: #8b2956; /* magenta */
+    --ls-primary: #d17b67;
+    --ls-secondary: #d4a373;
+    --ls-accent: #8a9a5b;
+    --ls-deep: #8b2956;
     --ls-ink: #2e2825;
     --ls-shadow-outer: rgba(138, 115, 104, 0.15);
 
@@ -43,7 +43,7 @@
         margin: 0;
         background: var(--ls-bg);
         color: var(--ls-ink);
-        font-family: "Outfit", system-ui, sans-serif;
+        font-family: 'Outfit', system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
@@ -57,12 +57,12 @@
 }
 
 .font-serif-display {
-    font-family: "Cormorant Garamond", serif;
-    font-feature-settings: "liga", "dlig", "swsh";
+    font-family: 'Cormorant Garamond', serif;
+    font-feature-settings: 'liga', 'dlig', 'swsh';
 }
 
 .font-sans-body {
-    font-family: "Outfit", system-ui, sans-serif;
+    font-family: 'Outfit', system-ui, sans-serif;
 }
 
 /* ---------- Claymorphism utilities ---------- */
@@ -93,23 +93,10 @@
         0 12px 24px rgba(209, 123, 103, 0.35),
         inset 0 -4px 8px rgba(139, 41, 86, 0.25),
         inset 0 4px 8px rgba(255, 255, 255, 0.55);
-    transition:
-        transform 150ms ease,
-        box-shadow 150ms ease;
+    transition: transform 150ms ease, box-shadow 150ms ease;
 }
-.clay-btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow:
-        0 18px 30px rgba(209, 123, 103, 0.4),
-        inset 0 -4px 8px rgba(139, 41, 86, 0.25),
-        inset 0 4px 8px rgba(255, 255, 255, 0.6);
-}
-.clay-btn-primary:active {
-    transform: translateY(2px) scale(0.98);
-    box-shadow:
-        0 4px 8px rgba(209, 123, 103, 0.3),
-        inset 0 4px 8px rgba(139, 41, 86, 0.3);
-}
+.clay-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 30px rgba(209, 123, 103, 0.4), inset 0 -4px 8px rgba(139, 41, 86, 0.25), inset 0 4px 8px rgba(255, 255, 255, 0.6); }
+.clay-btn-primary:active { transform: translateY(2px) scale(0.98); box-shadow: 0 4px 8px rgba(209, 123, 103, 0.3), inset 0 4px 8px rgba(139, 41, 86, 0.3); }
 
 .clay-btn-olive {
     background: linear-gradient(180deg, #9caf6b 0%, #8a9a5b 60%, #6f7e46 100%);
@@ -120,16 +107,10 @@
         0 12px 24px rgba(138, 154, 91, 0.35),
         inset 0 -4px 8px rgba(60, 78, 30, 0.28),
         inset 0 4px 8px rgba(255, 255, 255, 0.55);
-    transition:
-        transform 150ms ease,
-        box-shadow 150ms ease;
+    transition: transform 150ms ease, box-shadow 150ms ease;
 }
-.clay-btn-olive:hover {
-    transform: translateY(-2px);
-}
-.clay-btn-olive:active {
-    transform: translateY(2px) scale(0.98);
-}
+.clay-btn-olive:hover { transform: translateY(-2px); }
+.clay-btn-olive:active { transform: translateY(2px) scale(0.98); }
 
 .clay-btn-ochre {
     background: linear-gradient(180deg, #e3b787 0%, #d4a373 60%, #b8895b 100%);
@@ -140,16 +121,10 @@
         0 12px 24px rgba(212, 163, 115, 0.35),
         inset 0 -4px 8px rgba(120, 80, 40, 0.28),
         inset 0 4px 8px rgba(255, 255, 255, 0.65);
-    transition:
-        transform 150ms ease,
-        box-shadow 150ms ease;
+    transition: transform 150ms ease, box-shadow 150ms ease;
 }
-.clay-btn-ochre:hover {
-    transform: translateY(-2px);
-}
-.clay-btn-ochre:active {
-    transform: translateY(2px) scale(0.98);
-}
+.clay-btn-ochre:hover { transform: translateY(-2px); }
+.clay-btn-ochre:active { transform: translateY(2px) scale(0.98); }
 
 .clay-btn-ghost {
     background: #ffffff;
@@ -160,16 +135,10 @@
         0 10px 20px rgba(138, 115, 104, 0.12),
         inset 0 -3px 6px rgba(138, 115, 104, 0.08),
         inset 0 3px 6px rgba(255, 255, 255, 0.9);
-    transition:
-        transform 150ms ease,
-        box-shadow 150ms ease;
+    transition: transform 150ms ease, box-shadow 150ms ease;
 }
-.clay-btn-ghost:hover {
-    transform: translateY(-2px);
-}
-.clay-btn-ghost:active {
-    transform: translateY(2px) scale(0.98);
-}
+.clay-btn-ghost:hover { transform: translateY(-2px); }
+.clay-btn-ghost:active { transform: translateY(2px) scale(0.98); }
 
 .clay-input {
     background: #ffffff;
@@ -180,7 +149,7 @@
         0 1px 2px rgba(138, 115, 104, 0.04);
     border: 1px solid rgba(138, 115, 104, 0.08);
     padding: 14px 18px;
-    font-family: "Outfit", sans-serif;
+    font-family: 'Outfit', sans-serif;
     color: var(--ls-ink);
     width: 100%;
     outline: none;
@@ -221,35 +190,12 @@
     pointer-events: none;
 }
 
-.animate-float {
-    animation: ls-float 6s ease-in-out infinite;
-}
-@keyframes ls-float {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-14px);
-    }
-}
+.animate-float { animation: ls-float 6s ease-in-out infinite; }
+@keyframes ls-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
 
-.animate-float-slow {
-    animation: ls-float 10s ease-in-out infinite;
-}
+.animate-float-slow { animation: ls-float 10s ease-in-out infinite; }
 
-.animate-spin-slow {
-    animation: spin 22s linear infinite;
-}
+.animate-spin-slow { animation: spin 22s linear infinite; }
 
-.marquee {
-    animation: marquee 40s linear infinite;
-}
-@keyframes marquee {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-50%);
-    }
-}
+.marquee { animation: marquee 40s linear infinite; }
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }

@@ -1,5 +1,5 @@
-/* App-level tweaks — Claymorphism theme is in index.css */
+/* App-level tweaks — Claymorphism theme lives in index.css */
 .App {
-    min-height: 100vh;
-    background: var(--ls-bg);
+  min-height: 100vh;
+  background: var(--ls-bg);
 }

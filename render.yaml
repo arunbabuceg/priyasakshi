@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: lakshmi-sakshi-api
+    name: priya-sakshi-api
     runtime: python
     plan: free
     region: singapore
@@ -14,8 +14,14 @@ services:
       - key: MONGO_URL
         sync: false
       - key: DB_NAME
-        value: lakshmi_sakshi
-      - key: STRIPE_API_KEY
-        sync: false
+        value: priya_sakshi
       - key: CORS_ORIGINS
         sync: false
+      - key: EMAIL_ENABLED
+        value: "false"
+      - key: RESEND_API_KEY
+        sync: false
+      - key: BRAND_FROM_EMAIL
+        value: "hello@priyasakshi.com"
+      - key: BRAND_NAME
+        value: "Priya Sakshi"

@@ -17,6 +17,11 @@ if (typeof window !== 'undefined' && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
 
+// jsdom doesn't implement window.scrollTo (used by the scroll-lock hook)
+if (typeof window !== 'undefined' && !window.scrollTo) {
+  window.scrollTo = () => {};
+}
+
 // matchMedia stub for components that check reduced-motion etc.
 if (typeof window !== 'undefined' && !window.matchMedia) {
   window.matchMedia = () => ({

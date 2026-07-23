@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .db import close_db, get_db
-from .routes import contact, health, newsletter, orders
+from .routes import auth, contact, health, newsletter, orders
 
 logging.basicConfig(
     level=logging.INFO,
@@ -56,6 +56,7 @@ def create_app() -> FastAPI:
 
     # ---- Routers (all prefixed with /api via ingress rules) ----
     app.include_router(health.router, prefix="/api")
+    app.include_router(auth.router, prefix="/api")
     app.include_router(newsletter.router, prefix="/api")
     app.include_router(contact.router, prefix="/api")
     app.include_router(orders.router, prefix="/api")

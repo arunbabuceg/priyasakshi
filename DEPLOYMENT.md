@@ -32,11 +32,16 @@ Repo layout expects `backend/` at the repo root (with `server.py`, `requirements
 1. Push the repo to GitHub.
 2. <https://dashboard.render.com/blueprints> → **New Blueprint** → connect the repo.
 3. Render reads `render.yaml` and provisions the `priya-sakshi-api` web service.
-4. Fill in the secret env vars when prompted:
+4. Fill in the secret env vars when prompted (see `backend/.env.example`):
    - `MONGO_URL`  → the Atlas string from step 1
    - `CORS_ORIGINS` → leave `*` for now (tighten once the Vercel URL is known, e.g. `https://priya-sakshi.vercel.app,https://priyasakshi.com`)
-   - `EMAIL_ENABLED` → `false` (leave off until you have a Resend key)
-   - `RESEND_API_KEY` → leave blank
+   - `JWT_SECRET` → a long random string (required for auth)
+   - `SMTP_HOST` → `smtp.titan.email`
+   - `SMTP_PORT` → `587`
+   - `SMTP_USER` → your Titan email address
+   - `SMTP_PASS` → your Titan email password
+   - `CONTACT_TO_EMAIL` → `arunbabuceg@gmail.com`
+   - `FRONTEND_URL` → your Vercel frontend URL (for email links)
    - `BRAND_FROM_EMAIL` → `hello@yourdomain.com` (defaults are fine)
 5. Click **Apply**. Render builds and deploys in ~3 min. Health-check path is `/api/`.
 6. Copy the public URL Render assigns, e.g. `https://priya-sakshi-api.onrender.com`.
@@ -73,14 +78,18 @@ Open the deployed URL, add a saree to the basket, click Checkout, submit the for
 
 ---
 
-## 4. Enabling email later (Resend)
+## 4. Email (Titan SMTP)
 
-1. Sign up at <https://resend.com> and create an API key.
-2. On Render → the API service → **Environment**:
-   - `RESEND_API_KEY` = your key
-   - `EMAIL_ENABLED` = `true`
-   - `BRAND_FROM_EMAIL` = `hello@yourdomain.com` (must be a domain you've verified in Resend)
-3. Redeploy. New newsletter subscribers now receive a welcome email; contact-form submissions are relayed to `BRAND_FROM_EMAIL`.
+Email is sent via Titan SMTP (STARTTLS, port 587). Set on Render → the API service → **Environment**:
+
+- `SMTP_HOST` = `smtp.titan.email`
+- `SMTP_PORT` = `587`
+- `SMTP_USER` = your Titan email address
+- `SMTP_PASS` = your Titan email password
+- `CONTACT_TO_EMAIL` = `arunbabuceg@gmail.com` (where contact + order notifications go)
+- `FRONTEND_URL` = your frontend URL (used for email verification / reset links)
+
+If `SMTP_USER` / `SMTP_PASS` are unset, email calls are logged no-ops (safe for local dev). When set, contact-form submissions and new-order notifications are delivered to `CONTACT_TO_EMAIL`, and customers receive a branded order confirmation.
 
 ---
 

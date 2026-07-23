@@ -7,7 +7,7 @@ export default function Testimonials() {
   return (
     <section
       id="testimonials"
-      className="relative py-24 md:py-32 overflow-hidden"
+      className="relative py-16 md:py-32 overflow-hidden"
       data-testid="testimonials-section"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">

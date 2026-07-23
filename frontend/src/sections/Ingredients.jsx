@@ -20,7 +20,7 @@ export default function Ingredients() {
   const visible = expanded ? items : items.slice(0, 24);
 
   return (
-    <section id="ingredients" className="relative py-24 md:py-32" data-testid="ingredients-section">
+    <section id="ingredients" className="relative py-16 md:py-32" data-testid="ingredients-section">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-12 gap-10 items-start">
           <motion.div

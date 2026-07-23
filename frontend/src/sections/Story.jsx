@@ -7,7 +7,7 @@ const ICONS = { Leaf, Scissors, Hand, Heart };
 
 export default function Story() {
   return (
-    <section id="story" className="relative py-24 md:py-32" data-testid="story-section">
+    <section id="story" className="relative py-16 md:py-32" data-testid="story-section">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-12 gap-12 items-start">
           <motion.div

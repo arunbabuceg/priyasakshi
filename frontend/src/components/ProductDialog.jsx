@@ -4,11 +4,14 @@ import { Plus, Minus, ShoppingBag } from 'lucide-react';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
+import { useScrollLock } from '@/hooks/useScrollLock';
 import { formatINR } from '@/lib/format';
 import ProductGallery from './ProductGallery';
 
 export default function ProductDialog({ product, open, onOpenChange }) {
   const { items, add, updateQty } = useCart();
+  useScrollLock(open && !!product);
+
   if (!product) return null;
 
   const existing = items.find((i) => i.product.id === product.id);

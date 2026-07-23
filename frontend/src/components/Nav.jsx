@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { ShoppingBag, Menu, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ShoppingBag, Menu, X, User, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { site } from '@/data/site';
 
 const NAV_LINKS = [
@@ -14,8 +17,19 @@ const NAV_LINKS = [
 
 export default function Nav() {
   const { count, setIsOpen, bounce } = useCart();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    setMenuOpen(false);
+    setMobileOpen(false);
+    toast.success('Signed out');
+    navigate('/');
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -78,6 +92,56 @@ export default function Nav() {
           </nav>
 
           <div className="flex items-center gap-2">
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="clay-btn-ghost h-11 px-3 flex items-center gap-2"
+                  data-testid="nav-user-btn"
+                >
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                    style={{ background: 'linear-gradient(180deg,#EBA8C5,#8B2956)' }}
+                  >
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="hidden sm:block text-sm font-medium text-[#2E2825] max-w-[100px] truncate">
+                    {user.name}
+                  </span>
+                </button>
+                <AnimatePresence>
+                  {menuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="absolute right-0 mt-2 clay-card p-2 w-48 z-50"
+                      data-testid="nav-user-menu"
+                    >
+                      <div className="px-3 py-2 text-xs text-[#2E2825]/60 truncate">{user.email}</div>
+                      {!user.email_verified && (
+                        <div className="px-3 py-1 text-[11px] text-[#8A9A5B]">Verify your email</div>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-3 py-2 rounded-2xl text-sm text-[#2E2825] hover:bg-[#F3EBDC] flex items-center gap-2"
+                        data-testid="nav-logout-btn"
+                      >
+                        <LogOut className="w-4 h-4" /> Sign out
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <button
+                onClick={() => navigate('/login')}
+                className="clay-btn-ghost h-11 px-4 flex items-center gap-2 text-sm"
+                data-testid="nav-login-btn"
+              >
+                <User className="w-4 h-4" /> <span className="hidden sm:block">Sign in</span>
+              </button>
+            )}
             <motion.button
               key={bounce}
               onClick={() => setIsOpen(true)}
@@ -133,6 +197,25 @@ export default function Nav() {
                   {l.label}
                 </button>
               ))}
+              <div className="border-t border-[#EFE6D6] mt-2 pt-2">
+                {user ? (
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F3EBDC] flex items-center gap-2"
+                    data-testid="mobile-logout-btn"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign out ({user.name})
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setMobileOpen(false); navigate('/login'); }}
+                    className="w-full text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F3EBDC] flex items-center gap-2"
+                    data-testid="mobile-login-btn"
+                  >
+                    <User className="w-4 h-4" /> Sign in
+                  </button>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

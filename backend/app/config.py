@@ -37,10 +37,22 @@ class Settings(BaseSettings):
     # ---- Branding ----
     brand_name: str = Field("Priya Sakshi", alias="BRAND_NAME")
     brand_from_email: str = Field("hello@priyasakshi.com", alias="BRAND_FROM_EMAIL")
+    contact_to_email: str = Field("arunbabuceg@gmail.com", alias="CONTACT_TO_EMAIL")
+    frontend_url: str = Field("http://localhost:3000", alias="FRONTEND_URL")
 
-    # ---- Email (Resend) ----
-    email_enabled: bool = Field(False, alias="EMAIL_ENABLED")
-    resend_api_key: str = Field("", alias="RESEND_API_KEY")
+    # ---- Email (Titan SMTP) ----
+    smtp_host: str = Field("smtp.titan.email", alias="SMTP_HOST")
+    smtp_port: int = Field(587, alias="SMTP_PORT")
+    smtp_user: str = Field("", alias="SMTP_USER")
+    smtp_pass: str = Field("", alias="SMTP_PASS")
+
+    # ---- Auth (JWT) ----
+    jwt_secret: str = Field("change-me-in-production", alias="JWT_SECRET")
+    jwt_algorithm: str = Field("HS256", alias="JWT_ALGORITHM")
+    access_token_expire_minutes: int = Field(60 * 24, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    refresh_token_expire_days: int = Field(30, alias="REFRESH_TOKEN_EXPIRE_DAYS")
+    verification_token_expire_hours: int = Field(24, alias="VERIFICATION_TOKEN_EXPIRE_HOURS")
+    password_reset_token_expire_hours: int = Field(1, alias="PASSWORD_RESET_TOKEN_EXPIRE_HOURS")
 
     @property
     def cors_origins_list(self) -> List[str]:

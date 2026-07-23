@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Instagram, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Drama as Instagram, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { sendContactMessage } from '@/services/contactService';
 import { subscribeNewsletter } from '@/services/newsletterService';
@@ -44,7 +44,7 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="relative py-24 md:py-32" data-testid="contact-section">
+    <section id="contact" className="relative py-16 md:py-32" data-testid="contact-section">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-10">
           <motion.div

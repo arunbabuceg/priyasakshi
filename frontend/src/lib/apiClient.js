@@ -10,6 +10,7 @@ export const apiClient = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
   timeout: 20_000,
+  withCredentials: true, // send HTTP-only auth cookies
 });
 
 /** Extract a user-friendly error message from an axios error. */

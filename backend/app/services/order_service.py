@@ -42,7 +42,8 @@ class OrderService:
             order["id"], order["customer_email"], len(order["items"]), order["total"],
         )
 
-        # Best-effort confirmation email — will no-op if email is disabled.
+        # Notify the store owner and confirm to the customer (best-effort).
+        await email_service.send_owner_order_notification(order)
         await email_service.send_order_confirmation(order)
         return order
 

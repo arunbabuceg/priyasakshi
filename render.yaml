@@ -47,3 +47,8 @@ services:
         value: "24"
       - key: PASSWORD_RESET_TOKEN_EXPIRE_HOURS
         value: "1"
+      # ---- Razorpay ----
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false

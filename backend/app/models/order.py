@@ -27,6 +27,13 @@ class ShippingAddress(BaseModel):
     country: Optional[str] = "India"
 
 
+class PaymentInfo(BaseModel):
+    razorpay_order_id: Optional[str] = None
+    razorpay_payment_id: Optional[str] = None
+    razorpay_signature: Optional[str] = None
+    method: Optional[str] = None
+
+
 class OrderCreate(BaseModel):
     customer_name: str
     customer_email: EmailStr
@@ -38,6 +45,7 @@ class OrderCreate(BaseModel):
     shipping_fee: Optional[float] = Field(None, ge=0)
     total: Optional[float] = Field(None, ge=0)
     notes: Optional[str] = None
+    payment: Optional[PaymentInfo] = None
 
 
 class OrderResponse(BaseModel):

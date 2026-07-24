@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     verification_token_expire_hours: int = Field(24, alias="VERIFICATION_TOKEN_EXPIRE_HOURS")
     password_reset_token_expire_hours: int = Field(1, alias="PASSWORD_RESET_TOKEN_EXPIRE_HOURS")
 
+    # ---- Razorpay ----
+    razorpay_key_id: str = Field("", alias="RAZORPAY_KEY_ID")
+    razorpay_key_secret: str = Field("", alias="RAZORPAY_KEY_SECRET")
+
     @property
     def cors_origins_list(self) -> List[str]:
         raw = (self.cors_origins or "").strip()

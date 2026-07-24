@@ -45,10 +45,11 @@ priya-sakshi/
   - Contact form submissions are sent to `arunbabuceg@gmail.com`.
   - Every new order sends a full notification email to `arunbabuceg@gmail.com`.
   - Customers automatically receive a responsive branded order confirmation.
-- **Orders** — Orders are recorded in MongoDB; the payment step is intentionally
-  disabled and shows "Online payments will be available soon." The payment
-  layer is modular so Razorpay/Stripe can be plugged in later with minimal
-  changes (see `frontend/src/services/paymentService.js`).
+- **Orders** — Orders are recorded in MongoDB and paid via Razorpay Standard
+  Web Checkout. The backend creates a Razorpay order, the frontend opens the
+  Razorpay modal, and the backend verifies the HMAC-SHA256 payment signature
+  before marking the order as paid. The payment layer is modular — see
+  `frontend/src/services/paymentService.js`.
 - **Mobile** — Tightened section spacing on mobile; the product modal is fully
   touch-scrollable and never freezes the page.
 
@@ -77,6 +78,8 @@ See [`backend/.env.example`](backend/.env.example).
 | `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token lifetime | `30` |
 | `VERIFICATION_TOKEN_EXPIRE_HOURS` | Email verification link lifetime | `24` |
 | `PASSWORD_RESET_TOKEN_EXPIRE_HOURS` | Password reset link lifetime | `1` |
+| `RAZORPAY_KEY_ID` | Razorpay public key | `rzp_test_...` |
+| `RAZORPAY_KEY_SECRET` | Razorpay secret (backend only, never frontend) | `••••••••` |
 
 > Never hardcode SMTP credentials or JWT secrets. Always load them from
 > environment variables. Do not commit `.env`.
@@ -88,6 +91,7 @@ See [`frontend/.env.example`](frontend/.env.example).
 | Variable | Purpose | Example |
 | --- | --- | --- |
 | `VITE_BACKEND_URL` | Base URL of the FastAPI backend (no `/api`) | `http://localhost:8001` |
+| `VITE_RAZORPAY_KEY_ID` | Razorpay public key (safe for frontend) | `rzp_test_...` |
 
 ## Running locally
 
@@ -174,19 +178,25 @@ emails are delivered to `CONTACT_TO_EMAIL` (default `arunbabuceg@gmail.com`).
 
 No backend redeploy required for any of the above.
 
-## Payment (future-ready)
+## Payments (Razorpay)
 
-Payments are intentionally disabled. To enable a provider later, edit only:
+Razorpay Standard Web Checkout is integrated and enabled.
 
-1. `frontend/src/services/paymentService.js` — implement `startCheckout(orderPayload)`
-   for your provider (Razorpay `checkout.js`, Stripe redirect, etc.) and flip
-   `PAYMENTS_ENABLED = true`.
-2. `frontend/src/components/CheckoutForm.jsx` — the `if (PAYMENTS_ENABLED)`
-   branch already exists; drop the provider call there.
-3. Backend `services/order_service.py` — wire the payment webhook to mark
-   orders as paid.
+**Flow:**
+1. Frontend posts the order to `/api/orders` (recorded as `pending_payment`).
+2. Frontend calls `/api/payments/create-order` → backend creates a Razorpay
+   order via the Razorpay API and returns `{ order_id, amount, currency }`.
+3. Frontend opens the Razorpay checkout modal (`checkout.js`).
+4. On success, the frontend sends `razorpay_payment_id`,
+   `razorpay_order_id`, and `razorpay_signature` to `/api/payments/verify`.
+5. Backend computes `HMAC-SHA256(order_id + "|" + payment_id, KEY_SECRET)` and
+   compares it to the signature. The order is only marked paid if they match.
 
-No payment-specific logic is hardcoded elsewhere.
+**Security:** `RAZORPAY_KEY_SECRET` lives only on the backend. The frontend
+receives only the public `VITE_RAZORPAY_KEY_ID`.
+
+**Environment variables:** `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` (backend),
+`VITE_RAZORPAY_KEY_ID` (frontend).
 
 ## Deploying
 

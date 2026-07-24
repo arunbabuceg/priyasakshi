@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CartProvider, useCart } from '@/context/CartContext';
@@ -10,7 +10,23 @@ vi.mock('@/services/orderService', () => ({
   createOrder: vi.fn().mockResolvedValue({ ok: true, data: { order_id: 'test-id' } }),
 }));
 
+// Mock the payment service — Razorpay modal is not available in jsdom.
+vi.mock('@/services/paymentService', () => ({
+  PAYMENTS_ENABLED: true,
+  createRazorpayOrder: vi.fn().mockResolvedValue({
+    ok: true,
+    data: { order_id: 'rzp_test_123', amount: 199900, currency: 'INR' },
+  }),
+  openRazorpayCheckout: vi.fn().mockResolvedValue({
+    razorpay_payment_id: 'pay_test_123',
+    razorpay_order_id: 'rzp_test_123',
+    razorpay_signature: 'sig_test_123',
+  }),
+  verifyPayment: vi.fn().mockResolvedValue({ ok: true, data: { ok: true } }),
+}));
+
 import { createOrder } from '@/services/orderService';
+import { createRazorpayOrder, verifyPayment } from '@/services/paymentService';
 
 const product = {
   id: 'skin-tamarai-oil',
@@ -46,15 +62,15 @@ beforeEach(() => {
 });
 
 describe('CheckoutForm', () => {
-  it('renders the form and totals', () => {
+  it('renders the form and totals with Razorpay pay button', () => {
     renderCheckout();
     expect(screen.getByTestId('checkout-name')).toBeInTheDocument();
     expect(screen.getByTestId('checkout-email')).toBeInTheDocument();
-    // "Online payments will be available soon." copy is shown
-    expect(screen.getByText(/Online payments will be available soon/i)).toBeInTheDocument();
+    // The submit button now says "Pay" (Razorpay enabled)
+    expect(screen.getByTestId('checkout-submit-btn')).toHaveTextContent(/pay/i);
   });
 
-  it('records the order and does not attempt payment on submit', async () => {
+  it('records the order, creates a Razorpay order, and verifies payment on submit', async () => {
     const user = userEvent.setup();
     renderCheckout();
 
@@ -67,8 +83,11 @@ describe('CheckoutForm', () => {
 
     await user.click(screen.getByTestId('checkout-submit-btn'));
 
-    // Order was recorded once, no navigation happened
-    expect(createOrder).toHaveBeenCalledTimes(1);
-    expect(window.location.href).not.toMatch(/checkout|stripe|razorpay/i);
+    // Order was recorded, Razorpay order created, and payment verified
+    await waitFor(() => {
+      expect(createOrder).toHaveBeenCalledTimes(1);
+      expect(createRazorpayOrder).toHaveBeenCalledTimes(1);
+      expect(verifyPayment).toHaveBeenCalledTimes(1);
+    });
   });
 });

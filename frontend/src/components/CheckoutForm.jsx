@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { ArrowLeft, Lock, Loader as Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
 import { formatINR } from '@/lib/format';
 import { createOrder } from '@/services/orderService';
-import { PAYMENTS_ENABLED } from '@/services/paymentService';
-
-const PAYMENT_DISABLED_MESSAGE = 'Online payments will be available soon.';
+import {
+  PAYMENTS_ENABLED,
+  createRazorpayOrder,
+  openRazorpayCheckout,
+  verifyPayment,
+} from '@/services/paymentService';
 
 const initialForm = {
   customer_name: '',
@@ -57,42 +60,93 @@ export default function CheckoutForm({ onBack }) {
 
     setSubmitting(true);
 
-    // Best-effort: record the order server-side so it is not lost even though
-    // payments are disabled. The response is not required to show the notice.
+    const orderPayload = {
+      customer_name: form.customer_name,
+      customer_email: form.customer_email,
+      phone: form.phone || undefined,
+      items: items.map((i) => ({
+        product_id: i.product.id,
+        name: i.product.name,
+        quantity: i.quantity,
+        price: i.product.price,
+      })),
+      shipping: {
+        line1: form.shipping_address,
+        city: form.shipping_city,
+        state: form.shipping_state,
+        postal_code: form.shipping_postal_code,
+        country: form.shipping_country,
+      },
+      currency: 'INR',
+      subtotal,
+      shipping_fee: shipping,
+      total,
+    };
+
+    // 1. Record the order server-side (status: pending_payment).
+    let orderResult;
     try {
-      await createOrder({
-        customer_name: form.customer_name,
-        customer_email: form.customer_email,
-        phone: form.phone || undefined,
-        items: items.map((i) => ({
-          product_id: i.product.id,
-          name: i.product.name,
-          quantity: i.quantity,
-          price: i.product.price,
-        })),
-        shipping: {
-          line1: form.shipping_address,
-          city: form.shipping_city,
-          state: form.shipping_state,
-          postal_code: form.shipping_postal_code,
-          country: form.shipping_country,
-        },
-        currency: 'INR',
-        subtotal,
-        shipping_fee: shipping,
-        total,
-      });
+      orderResult = await createOrder(orderPayload);
     } catch {
-      // Silent: the payment notice is what the user sees either way.
+      orderResult = { ok: false };
+    }
+    if (!orderResult?.ok) {
+      toast.error(orderResult?.error || 'Could not place order');
+      setSubmitting(false);
+      return;
     }
 
-    if (PAYMENTS_ENABLED) {
-      // Future: hand off to Razorpay / Stripe here.
+    if (!PAYMENTS_ENABLED) {
+      toast('Online payments will be available soon.', {
+        description: 'We\u2019ve saved your order details and will email you as soon as checkout goes live.',
+      });
+      setSubmitting(false);
+      return;
     }
 
-    toast(PAYMENT_DISABLED_MESSAGE, {
-      description: 'We\u2019ve saved your order details and will email you as soon as checkout goes live.',
-    });
+    // 2. Create a Razorpay order.
+    const rzOrder = await createRazorpayOrder(total, 'INR', orderResult.data.order_id);
+    if (!rzOrder.ok) {
+      toast.error(rzOrder.error || 'Could not initiate payment');
+      setSubmitting(false);
+      return;
+    }
+
+    // 3. Open the Razorpay checkout modal.
+    let rzResponse;
+    try {
+      rzResponse = await openRazorpayCheckout({
+        orderId: rzOrder.data.order_id,
+        amount: rzOrder.data.amount,
+        currency: rzOrder.data.currency,
+        name: 'Priya Sakshi',
+        description: `Order ${orderResult.data.order_id.slice(0, 8)}`,
+        prefill: {
+          name: form.customer_name,
+          email: form.customer_email,
+          contact: form.phone || undefined,
+        },
+      });
+    } catch (modalErr) {
+      toast.error(modalErr.message || 'Payment cancelled');
+      setSubmitting(false);
+      return;
+    }
+
+    // 4. Verify the payment signature server-side.
+    const verification = await verifyPayment(
+      rzResponse.razorpay_order_id,
+      rzResponse.razorpay_payment_id,
+      rzResponse.razorpay_signature,
+    );
+
+    if (!verification.ok) {
+      toast.error(verification.error || 'Payment verification failed');
+      setSubmitting(false);
+      return;
+    }
+
+    toast.success('Payment successful! Your order is confirmed.');
     setSubmitting(false);
   };
 
@@ -195,10 +249,21 @@ export default function CheckoutForm({ onBack }) {
             className="w-full clay-btn-primary h-14 flex items-center justify-center gap-2 disabled:opacity-70"
             data-testid="checkout-submit-btn"
           >
-            <Lock className="w-4 h-4" />
-            {submitting ? 'Saving\u2026' : 'Complete Order'}
+            {submitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Processing…
+              </>
+            ) : (
+              <>
+                <Lock className="w-4 h-4" />
+                Pay {formatINR(total)}
+              </>
+            )}
           </button>
-          <p className="text-center text-xs text-[#2E2825]/50">{PAYMENT_DISABLED_MESSAGE}</p>
+          <p className="text-center text-xs text-[#2E2825]/50">
+            Secure payment powered by Razorpay
+          </p>
         </form>
       </div>
     </div>

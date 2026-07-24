@@ -18,6 +18,9 @@ PyJWT==2.10.1
 # SMTP
 aiosmtplib==3.0.2
 
+# Payments
+razorpay==1.4.2
+
 # Testing
 pytest==8.3.4
 pytest-asyncio==0.24.0

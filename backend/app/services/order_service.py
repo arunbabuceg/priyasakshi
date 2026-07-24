@@ -33,7 +33,7 @@ class OrderService:
             "shipping_fee": payload.shipping_fee,
             "total": payload.total,
             "notes": payload.notes,
-            "payment": None,  # populated by future payment provider integration
+            "payment": payload.payment.model_dump() if payload.payment else None,  # Razorpay details when available
         }
 
         await get_db().orders.insert_one(order)

@@ -42,7 +42,7 @@ async def create_order(payload: CreateRazorpayOrderRequest):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # pragma: no cover - network/SDK failure path
         logger.exception("Razorpay order creation failed for order_id=%s", payload.order_id)
-        raise HTTPException(status_code=502, detail="Could not create payment order") from exc
+        raise HTTPException(status_code=502, detail=f"{type(exc).__name__}: {exc}") from exc
 
     await order_service.mark_payment_initiated(payload.order_id, razorpay_order["id"])
 

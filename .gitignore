@@ -1,0 +1,30 @@
+# General project ignores.
+node_modules
+dist
+build
+coverage
+.pytest_cache
+__pycache__
+*.pyc
+
+# Env files (never commit real secrets)
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+.idea
+*.log
+
+# Python venvs
+.venv
+venv
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials

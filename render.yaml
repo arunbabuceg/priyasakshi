@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: priya-sakshi-api
+    runtime: python
+    plan: free
+    region: singapore
+    rootDir: backend
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn server:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /api/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: priya_sakshi
+      - key: CORS_ORIGINS
+        sync: false
+      - key: BRAND_FROM_EMAIL
+        value: "hello@priyasakshi.com"
+      - key: BRAND_NAME
+        value: "Priya Sakshi"
+      - key: CONTACT_TO_EMAIL
+        value: "arunbabuceg@gmail.com"
+      - key: FRONTEND_URL
+        sync: false
+      # ---- Titan SMTP ----
+      - key: SMTP_HOST
+        value: "smtp.titan.email"
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      # ---- Auth (JWT) ----
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_ALGORITHM
+        value: "HS256"
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "30"
+      - key: VERIFICATION_TOKEN_EXPIRE_HOURS
+        value: "24"
+      - key: PASSWORD_RESET_TOKEN_EXPIRE_HOURS
+        value: "1"

@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     smtp_user: str = Field("", alias="SMTP_USER")
     smtp_pass: str = Field("", alias="SMTP_PASS")
 
+    # ---- Resend ----
+resend_api_key: str = Field("", alias="re_FNzrKqky_PFJotgmRfKH2rhz3kky89TBP")
+
     # ---- Payments (Razorpay) ----
     razorpay_key_id: str = Field("", alias="RAZORPAY_KEY_ID")
     razorpay_key_secret: str = Field("", alias="RAZORPAY_KEY_SECRET")

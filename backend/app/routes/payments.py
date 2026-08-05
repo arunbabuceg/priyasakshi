@@ -19,6 +19,7 @@ from ..models.payment import (
     VerifyPaymentRequest,
     VerifyPaymentResponse,
 )
+from ..services.email_service import email_service
 from ..services.order_service import order_service
 from ..services.payment_service import payment_service
 
@@ -40,11 +41,20 @@ async def create_order(payload: CreateRazorpayOrderRequest):
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except Exception as exc:  # pragma: no cover - network/SDK failure path
-        logger.exception("Razorpay order creation failed for order_id=%s", payload.order_id)
-        raise HTTPException(status_code=502, detail=f"{type(exc).__name__}: {exc}") from exc
+    except Exception as exc:  # pragma: no cover
+        logger.exception(
+            "Razorpay order creation failed for order_id=%s",
+            payload.order_id,
+        )
+        raise HTTPException(
+            status_code=502,
+            detail=f"{type(exc).__name__}: {exc}",
+        ) from exc
 
-    await order_service.mark_payment_initiated(payload.order_id, razorpay_order["id"])
+    await order_service.mark_payment_initiated(
+        payload.order_id,
+        razorpay_order["id"],
+    )
 
     return CreateRazorpayOrderResponse(
         order_id=razorpay_order["id"],
@@ -64,19 +74,30 @@ async def verify_payment(payload: VerifyPaymentRequest):
         razorpay_payment_id=payload.razorpay_payment_id,
         razorpay_signature=payload.razorpay_signature,
     )
+
     if not is_valid:
         logger.warning(
             "Razorpay signature verification failed for order_id=%s razorpay_order_id=%s",
-            payload.order_id, payload.razorpay_order_id,
+            payload.order_id,
+            payload.razorpay_order_id,
         )
-        raise HTTPException(status_code=400, detail="Payment verification failed")
+        raise HTTPException(
+            status_code=400,
+            detail="Payment verification failed",
+        )
 
-    await order_service.mark_payment_verified(
+    order = await order_service.mark_payment_verified(
         order_id=payload.order_id,
         razorpay_order_id=payload.razorpay_order_id,
         razorpay_payment_id=payload.razorpay_payment_id,
     )
 
+    # Send emails only after successful payment verification
+    await email_service.send_owner_order_notification(order)
+    await email_service.send_order_confirmation(order)
+
     return VerifyPaymentResponse(
-        success=True, order_id=payload.order_id, message="Payment verified successfully"
+        success=True,
+        order_id=payload.order_id,
+        message="Payment verified successfully",
     )

@@ -12,13 +12,13 @@ export const testimonials = [
     text: 'The Tamarai hair oil is the only thing that has ever tamed my scalp. Three months in, I feel like myself again.',
     name: 'Divya K.',
     city: 'Bengaluru',
-    color: '#F3D2A8',
+    color: '#EBA8C5',
   },
   {
     id: 't3',
     text: "I've bought sarees from every corner of India. Priya Sakshi is the only house that answers my emails within an hour.",
     name: 'Meera P.',
     city: 'Mumbai',
-    color: '#C7D6A1',
+    color: '#C9B5DD',
   },
 ];

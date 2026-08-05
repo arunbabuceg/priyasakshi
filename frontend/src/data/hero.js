@@ -23,7 +23,7 @@ export const hero = {
   ],
   collage: [
     { image: sareeImg, alt: 'Magenta silk saree', bg: '#EBA8C5' },
-    { image: oilImg, alt: 'Tamarai hair oil', bg: '#F3D2A8' },
-    { image: serumImg, alt: 'Ganga Tulasi serum', bg: '#C7D6A1' },
+    { image: oilImg, alt: 'Tamarai hair oil', bg: '#E8D5E0' },
+    { image: serumImg, alt: 'Ganga Tulasi serum', bg: '#C9B5DD' },
   ],
 };

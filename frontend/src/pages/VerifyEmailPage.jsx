@@ -23,7 +23,7 @@ export default function VerifyEmailPage() {
   }, [token]);
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] relative overflow-hidden flex items-center justify-center px-4 py-20">
+    <div className="min-h-screen bg-[#FAF5F8] relative overflow-hidden flex items-center justify-center px-4 py-20">
       <ClayShapes variant="hero" />
       <motion.div
         initial={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -41,7 +41,7 @@ export default function VerifyEmailPage() {
           <>
             <div
               className="w-20 h-20 rounded-full mx-auto flex items-center justify-center"
-              style={{ background: 'linear-gradient(180deg,#B4C77E,#6F7E46)' }}
+              style={{ background: 'linear-gradient(180deg,#C9B5DD,#7B6B9A)' }}
             >
               <CheckCircle2 className="w-10 h-10 text-white" />
             </div>

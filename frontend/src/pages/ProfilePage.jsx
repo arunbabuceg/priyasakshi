@@ -66,7 +66,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] relative overflow-hidden px-4 py-28 md:py-32">
+    <div className="min-h-screen bg-[#FAF5F8] relative overflow-hidden px-4 py-28 md:py-32">
       <ClayShapes variant="hero" />
       <div className="relative max-w-2xl mx-auto">
         <button

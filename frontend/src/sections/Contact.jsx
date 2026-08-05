@@ -117,7 +117,7 @@ export default function Contact() {
 
             <div
               className="clay-card p-8"
-              style={{ background: 'linear-gradient(180deg, #F7CFC1 0%, #EBA8C5 100%)' }}
+              style={{ background: 'linear-gradient(180deg, #F5D9DD 0%, #EBA8C5 100%)' }}
             >
               <h3 className="font-serif-display text-3xl text-[#8B2956]">
                 Slow letters,
@@ -168,7 +168,7 @@ const Info = ({ icon: Icon, text, testId }) => (
       className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
       style={{
         background: '#fff',
-        boxShadow: 'inset 0 -3px 6px rgba(138,115,104,0.15), inset 0 3px 6px rgba(255,255,255,0.9), 0 4px 8px rgba(138,115,104,0.08)',
+        boxShadow: 'inset 0 -3px 6px rgba(138,115,130,0.15), inset 0 3px 6px rgba(255,255,255,0.9), 0 4px 8px rgba(138,115,130,0.08)',
       }}
     >
       <Icon className="w-4 h-4 text-[#8B2956]" />

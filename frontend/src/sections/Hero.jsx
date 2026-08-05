@@ -35,9 +35,9 @@ export default function Hero() {
               className="font-serif-display text-[#8B2956] text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight"
               data-testid="hero-title"
             >
-              {hero.headingTop} <em className="italic text-[#D17B67]">{hero.headingTopAccent}</em>
+              {hero.headingTop} <em className="italic text-[#C99AA0]">{hero.headingTopAccent}</em>
               <br />
-              {hero.headingBottom} <em className="italic text-[#8A9A5B]">{hero.headingBottomAccent}</em>
+              {hero.headingBottom} <em className="italic text-[#9B8BB4]">{hero.headingBottomAccent}</em>
             </h1>
             <p
               className="mt-6 text-base sm:text-lg text-[#2E2825]/75 max-w-xl leading-relaxed"
@@ -141,10 +141,10 @@ const HeroCollage = () => (
       );
     })}
     <motion.div className="absolute -top-4 right-[35%] z-40 animate-spin-slow">
-      <KolamStar size={70} color="#8A9A5B" />
+      <KolamStar size={70} color="#9B8BB4" />
     </motion.div>
     <motion.div className="absolute bottom-8 -right-2 z-40">
-      <KolamStar size={50} color="#D17B67" />
+      <KolamStar size={50} color="#C99AA0" />
     </motion.div>
   </div>
 );

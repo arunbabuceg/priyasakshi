@@ -66,12 +66,12 @@ export default function Nav() {
         <div
           className={`flex items-center justify-between rounded-full px-4 sm:px-6 py-2.5 backdrop-blur-xl transition-all duration-300 ${
             scrolled
-              ? 'bg-[#FAF7F2]/85 shadow-[0_20px_40px_rgba(138,115,104,0.15)]'
-              : 'bg-[#FAF7F2]/60'
+              ? 'bg-[#FAF5F8]/85 shadow-[0_20px_40px_rgba(138,115,130,0.15)]'
+              : 'bg-[#FAF5F8]/60'
           }`}
           style={{
             boxShadow: scrolled
-              ? '0 20px 40px rgba(138,115,104,0.15), inset 0 -2px 4px rgba(138,115,104,0.08), inset 0 2px 4px rgba(255,255,255,0.85)'
+              ? '0 20px 40px rgba(138,115,130,0.15), inset 0 -2px 4px rgba(138,115,130,0.08), inset 0 2px 4px rgba(255,255,255,0.85)'
               : undefined,
           }}
         >
@@ -137,7 +137,7 @@ export default function Nav() {
                         onClick={handleVerifyEmail}
                         disabled={verifying}
                         className="w-full text-left px-3 py-2 rounded-2xl text-sm flex items-center gap-2 disabled:opacity-60"
-                        style={{ color: user.email_verified ? '#8A9A5B' : '#8B2956' }}
+                        style={{ color: user.email_verified ? '#9B8BB4' : '#8B2956' }}
                         data-testid="nav-verify-email-btn"
                       >
                         {verifying ? (
@@ -149,14 +149,14 @@ export default function Nav() {
                       </button>
                       <button
                         onClick={() => { setMenuOpen(false); navigate('/account'); }}
-                        className="w-full text-left px-3 py-2 rounded-2xl text-sm text-[#2E2825] hover:bg-[#F3EBDC] flex items-center gap-2"
+                        className="w-full text-left px-3 py-2 rounded-2xl text-sm text-[#2E2825] hover:bg-[#F5EBF0] flex items-center gap-2"
                         data-testid="nav-dashboard-btn"
                       >
                         <LayoutDashboard className="w-4 h-4" /> My Account
                       </button>
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-3 py-2 rounded-2xl text-sm text-[#2E2825] hover:bg-[#F3EBDC] flex items-center gap-2"
+                        className="w-full text-left px-3 py-2 rounded-2xl text-sm text-[#2E2825] hover:bg-[#F5EBF0] flex items-center gap-2"
                         data-testid="nav-logout-btn"
                       >
                         <LogOut className="w-4 h-4" /> Sign out
@@ -190,7 +190,7 @@ export default function Nav() {
                   data-testid="cart-count-badge"
                   className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 rounded-full text-white text-[11px] font-bold flex items-center justify-center"
                   style={{
-                    background: 'linear-gradient(180deg, #DC8A76 0%, #8B2956 100%)',
+                    background: 'linear-gradient(180deg, #D9AAB0 0%, #8B2956 100%)',
                     boxShadow:
                       '0 4px 8px rgba(139,41,86,0.4), inset 0 -2px 4px rgba(60,10,30,0.3), inset 0 2px 4px rgba(255,255,255,0.4)',
                   }}
@@ -223,25 +223,25 @@ export default function Nav() {
                 <button
                   key={l.id}
                   onClick={() => scrollTo(l.id)}
-                  className="text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F3EBDC]"
+                  className="text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F5EBF0]"
                   data-testid={`mobile-nav-link-${l.id}`}
                 >
                   {l.label}
                 </button>
               ))}
-              <div className="border-t border-[#EFE6D6] mt-2 pt-2">
+              <div className="border-t border-[#EADFE5] mt-2 pt-2">
                 {user ? (
                   <>
                     <button
                       onClick={() => { setMobileOpen(false); navigate('/account'); }}
-                      className="w-full text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F3EBDC] flex items-center gap-2"
+                      className="w-full text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F5EBF0] flex items-center gap-2"
                       data-testid="mobile-dashboard-btn"
                     >
                       <LayoutDashboard className="w-4 h-4" /> My Account
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F3EBDC] flex items-center gap-2"
+                      className="w-full text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F5EBF0] flex items-center gap-2"
                       data-testid="mobile-logout-btn"
                     >
                       <LogOut className="w-4 h-4" /> Sign out ({user.name})
@@ -250,7 +250,7 @@ export default function Nav() {
                 ) : (
                   <button
                     onClick={() => { setMobileOpen(false); navigate('/login'); }}
-                    className="w-full text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F3EBDC] flex items-center gap-2"
+                    className="w-full text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F5EBF0] flex items-center gap-2"
                     data-testid="mobile-login-btn"
                   >
                     <User className="w-4 h-4" /> Sign in

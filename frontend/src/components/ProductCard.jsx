@@ -6,10 +6,10 @@ import { useCart } from '@/context/CartContext';
 import { formatINR } from '@/lib/format';
 
 const PALETTES = [
-  { bg: '#F3D2A8', accent: '#D17B67' },
-  { bg: '#C7D6A1', accent: '#8A9A5B' },
+  { bg: '#F5D9DD', accent: '#C99AA0' },
+  { bg: '#E4D9F0', accent: '#9B8BB4' },
   { bg: '#EBA8C5', accent: '#8B2956' },
-  { bg: '#F3EBDC', accent: '#D4A373' },
+  { bg: '#F5EBF0', accent: '#D9B5C0' },
 ];
 
 export default function ProductCard({ product, index = 0, onOpen }) {

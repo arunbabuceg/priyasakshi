@@ -29,7 +29,7 @@ export default function CartDrawer() {
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-[480px] border-0 p-0 bg-[#FAF7F2]"
+        className="w-full sm:max-w-[480px] border-0 p-0 bg-[#FAF5F8]"
         data-testid="cart-drawer"
       >
         <div className="flex flex-col h-full">
@@ -65,7 +65,7 @@ export default function CartDrawer() {
                           <div
                             className="w-20 h-20 rounded-2xl flex-shrink-0 overflow-hidden"
                             style={{
-                              background: '#F3EBDC',
+                              background: '#F5EBF0',
                               boxShadow: 'inset 0 4px 8px rgba(0,0,0,0.08)',
                             }}
                           >
@@ -123,7 +123,7 @@ export default function CartDrawer() {
               </div>
 
               {items.length > 0 && (
-                <div className="border-t border-[#EFE6D6] px-6 py-6 bg-[#FAF7F2]" data-testid="cart-summary">
+                <div className="border-t border-[#EADFE5] px-6 py-6 bg-[#FAF5F8]" data-testid="cart-summary">
                   <div className="space-y-2 text-sm">
                     <Row
                       label="Subtotal"
@@ -135,7 +135,7 @@ export default function CartDrawer() {
                       value={shipping === 0 ? 'FREE' : formatINR(shipping)}
                       testId="cart-shipping"
                     />
-                    <div className="pt-2 mt-2 border-t border-[#EFE6D6] flex items-baseline justify-between">
+                    <div className="pt-2 mt-2 border-t border-[#EADFE5] flex items-baseline justify-between">
                       <span className="font-serif-display text-2xl text-[#2E2825]">Total</span>
                       <span
                         className="font-serif-display text-3xl font-semibold text-[#8B2956]"
@@ -177,8 +177,8 @@ const EmptyState = ({ onClose }) => (
     <div
       className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
       style={{
-        background: 'linear-gradient(180deg, #F3D2A8 0%, #D4A373 100%)',
-        boxShadow: '0 20px 30px rgba(180,140,90,0.3), inset 0 -6px 12px rgba(100,60,20,0.25), inset 0 6px 12px rgba(255,255,255,0.5)',
+        background: 'linear-gradient(180deg, #E8C4D0 0%, #D9B5C0 100%)',
+        boxShadow: '0 20px 30px rgba(180,140,160,0.3), inset 0 -6px 12px rgba(100,60,80,0.25), inset 0 6px 12px rgba(255,255,255,0.5)',
       }}
     >
       <ShoppingBag className="w-10 h-10 text-white" />

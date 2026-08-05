@@ -20,6 +20,6 @@ export const categories = [
     highlight: 'skincare.',
     subtitle:
       "Sun-dried tamarai, tulasi and kranthi petals cold-infused into pure carrier oils. Formulated by our founder in her grandmother's kitchen.",
-    accentColor: '#8A9A5B',
+    accentColor: '#9B8BB4',
   },
 ];

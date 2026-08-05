@@ -35,3 +35,22 @@ async def close_db() -> None:
         _client.close()
         _client = None
         _db = None
+
+
+def serialize_doc(doc: dict | None) -> dict | None:
+    """Strip MongoDB's non-serializable ``_id`` from a document.
+
+    FastAPI's JSON encoder cannot serialize ``ObjectId``; every endpoint that
+    returns a raw Mongo document must pass it through this helper first.
+    """
+    if doc is None:
+        return None
+    doc.pop("_id", None)
+    return doc
+
+
+def serialize_docs(docs: list[dict]) -> list[dict]:
+    """Strip ``_id`` from every document in a list."""
+    for d in docs:
+        d.pop("_id", None)
+    return docs

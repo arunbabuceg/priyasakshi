@@ -13,7 +13,7 @@ from typing import Optional
 
 from pymongo import ReturnDocument
 
-from ..db import get_db
+from ..db import get_db, serialize_doc, serialize_docs
 from ..models.order import OrderCreate
 
 logger = logging.getLogger("priya_sakshi.orders")
@@ -67,17 +67,17 @@ class OrderService:
             order["total"],
         )
 
-        return order
+        return serialize_doc(order)
 
     async def get_order(self, order_id: str) -> dict | None:
-        return await get_db().orders.find_one({"id": order_id})
+        return serialize_doc(await get_db().orders.find_one({"id": order_id}))
 
     async def list_orders_for_user(self, user_id: str, email: str | None = None) -> list[dict]:
         query: dict = {"user_id": user_id}
         if email:
             query = {"$or": [{"user_id": user_id}, {"customer_email": email.lower()}]}
         cursor = get_db().orders.find(query).sort("created_at", -1)
-        return await cursor.to_list(length=None)
+        return serialize_docs(await cursor.to_list(length=None))
 
     async def mark_payment_initiated(
         self,
@@ -143,6 +143,7 @@ class OrderService:
             },
             return_document=ReturnDocument.AFTER,
         )
+        return serialize_doc(updated)
 
 
 order_service = OrderService()

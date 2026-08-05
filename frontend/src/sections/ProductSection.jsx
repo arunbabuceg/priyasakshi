@@ -64,9 +64,9 @@ export default function ProductSection({
           <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="clay-card p-5" data-testid={`product-skeleton-${i}`}>
-                <div className="aspect-[4/5] rounded-[24px] bg-[#F3EBDC] animate-pulse" />
-                <div className="mt-4 h-4 bg-[#F3EBDC] rounded animate-pulse" />
-                <div className="mt-2 h-3 w-1/2 bg-[#F3EBDC] rounded animate-pulse" />
+                <div className="aspect-[4/5] rounded-[24px] bg-[#F5EBF0] animate-pulse" />
+                <div className="mt-4 h-4 bg-[#F5EBF0] rounded animate-pulse" />
+                <div className="mt-2 h-3 w-1/2 bg-[#F5EBF0] rounded animate-pulse" />
               </div>
             ))}
           </div>

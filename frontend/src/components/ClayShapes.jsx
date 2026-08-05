@@ -9,8 +9,8 @@ export const ClayShapes = ({ variant = 'hero' }) => {
   if (variant !== 'hero') return null;
   return (
     <>
-      <div className="clay-blob" style={{ width: 320, height: 320, background: '#F3C1A6', top: -60, left: -80 }} />
-      <div className="clay-blob" style={{ width: 280, height: 280, background: '#C7D6A1', bottom: -80, right: -60 }} />
+      <div className="clay-blob" style={{ width: 320, height: 320, background: '#E8C4D0', top: -60, left: -80 }} />
+      <div className="clay-blob" style={{ width: 280, height: 280, background: '#C9B5DD', bottom: -80, right: -60 }} />
       <div
         className="clay-blob"
         style={{ width: 220, height: 220, background: '#E8B6C7', top: '40%', right: '10%', opacity: 0.4 }}
@@ -47,8 +47,8 @@ export const LotusClay = ({ size = 120 }) => (
   <svg width={size} height={size} viewBox="0 0 120 120" fill="none">
     <defs>
       <radialGradient id="lotusGrad" cx="0.3" cy="0.3" r="0.8">
-        <stop offset="0%" stopColor="#F7C3B0" />
-        <stop offset="100%" stopColor="#D17B67" />
+        <stop offset="0%" stopColor="#F5D9DD" />
+        <stop offset="100%" stopColor="#C99AA0" />
       </radialGradient>
       <radialGradient id="lotusGrad2" cx="0.5" cy="0.3" r="0.8">
         <stop offset="0%" stopColor="#EBA8C5" />
@@ -65,14 +65,14 @@ export const LeafClay = ({ size = 140 }) => (
   <svg width={size} height={size} viewBox="0 0 140 140" fill="none">
     <defs>
       <radialGradient id="leafGrad" cx="0.3" cy="0.3" r="0.8">
-        <stop offset="0%" stopColor="#B4C77E" />
-        <stop offset="100%" stopColor="#6F7E46" />
+        <stop offset="0%" stopColor="#C9B5DD" />
+        <stop offset="100%" stopColor="#7B6B9A" />
       </radialGradient>
     </defs>
     <path d="M20 100 Q40 20 120 30 Q100 110 20 100 Z" fill="url(#leafGrad)" />
     <path
       d="M30 92 Q60 60 110 40"
-      stroke="#3F4B25"
+      stroke="#5A4A78"
       strokeWidth="3"
       strokeLinecap="round"
       fill="none"
@@ -85,8 +85,8 @@ export const BlobClay = ({ size = 90 }) => (
   <svg width={size} height={size} viewBox="0 0 90 90" fill="none">
     <defs>
       <radialGradient id="blobGrad" cx="0.35" cy="0.3" r="0.8">
-        <stop offset="0%" stopColor="#F3D2A8" />
-        <stop offset="100%" stopColor="#B8895B" />
+        <stop offset="0%" stopColor="#E8C4D0" />
+        <stop offset="100%" stopColor="#B8909E" />
       </radialGradient>
     </defs>
     <path

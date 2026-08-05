@@ -47,7 +47,7 @@ export default function Testimonials() {
               <p className="font-serif-display text-lg text-[#2E2825] leading-relaxed italic">
                 “{t.text}”
               </p>
-              <div className="mt-6 pt-6 border-t border-[#EFE6D6]">
+              <div className="mt-6 pt-6 border-t border-[#EADFE5]">
                 <div className="font-semibold text-[#8B2956]">{t.name}</div>
                 <div className="text-xs uppercase tracking-widest text-[#2E2825]/50 mt-1">{t.city}</div>
               </div>

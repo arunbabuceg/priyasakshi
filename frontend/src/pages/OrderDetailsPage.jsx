@@ -55,7 +55,7 @@ export default function OrderDetailsPage() {
   const timeline = order?.timeline || [];
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] relative overflow-hidden px-4 py-28 md:py-32">
+    <div className="min-h-screen bg-[#FAF5F8] relative overflow-hidden px-4 py-28 md:py-32">
       <ClayShapes variant="hero" />
       <div className="relative max-w-3xl mx-auto">
         <button
@@ -104,10 +104,10 @@ export default function OrderDetailsPage() {
                 </div>
               </div>
               <div className="mt-5 flex flex-wrap gap-2">
-                <span className="clay-pill" style={{ background: '#F3EBDC', color: '#8A9A5B' }} data-testid="order-detail-status">
+                <span className="clay-pill" style={{ background: '#F5EBF0', color: '#9B8BB4' }} data-testid="order-detail-status">
                   {STATUS_LABEL[order.status] || order.status}
                 </span>
-                <span className="clay-pill" style={{ background: '#F3D2A8', color: '#A06A2C' }} data-testid="order-detail-payment">
+                <span className="clay-pill" style={{ background: '#E8C4D0', color: '#8B2956' }} data-testid="order-detail-payment">
                   {PAYMENT_LABEL[order.payment_status] || order.payment_status}
                 </span>
               </div>
@@ -118,11 +118,11 @@ export default function OrderDetailsPage() {
               <h2 className="font-serif-display text-2xl text-[#2E2825] mb-4">Products</h2>
               <ul className="space-y-3">
                 {order.items?.map((it, i) => (
-                  <li key={i} className="flex items-center justify-between gap-4 pb-3 border-b border-[#EFE6D6] last:border-0">
+                  <li key={i} className="flex items-center justify-between gap-4 pb-3 border-b border-[#EADFE5] last:border-0">
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: '#F3EBDC', boxShadow: 'inset 0 -3px 6px rgba(138,115,104,0.15), inset 0 3px 6px rgba(255,255,255,0.9)' }}
+                        style={{ background: '#F5EBF0', boxShadow: 'inset 0 -3px 6px rgba(138,115,130,0.15), inset 0 3px 6px rgba(255,255,255,0.9)' }}
                       >
                         <Package className="w-5 h-5 text-[#8B2956]" />
                       </div>
@@ -198,7 +198,7 @@ export default function OrderDetailsPage() {
               {timeline.length === 0 ? (
                 <p className="text-sm text-[#2E2825]/60">No updates yet.</p>
               ) : (
-                <ol className="relative border-l-2 border-[#EFE6D6] ml-3 space-y-5">
+                <ol className="relative border-l-2 border-[#EADFE5] ml-3 space-y-5">
                   {timeline.map((t, i) => (
                     <li key={i} className="ml-5 relative">
                       <span

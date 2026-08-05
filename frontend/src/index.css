@@ -3,34 +3,34 @@
 @tailwind utilities;
 
 :root {
-    --ls-bg: #faf7f2;
-    --ls-cream: #f3ebdc;
-    --ls-primary: #d17b67;
-    --ls-secondary: #d4a373;
-    --ls-accent: #8a9a5b;
+    --ls-bg: #faf5f8;
+    --ls-cream: #f5ebf0;
+    --ls-primary: #c99aa0;
+    --ls-secondary: #d9b5c0;
+    --ls-accent: #9b8bb4;
     --ls-deep: #8b2956;
     --ls-ink: #2e2825;
-    --ls-shadow-outer: rgba(138, 115, 104, 0.15);
+    --ls-shadow-outer: rgba(138, 115, 130, 0.15);
 
-    --background: 36 33% 96%;
+    --background: 340 33% 96%;
     --foreground: 20 12% 16%;
     --card: 0 0% 100%;
     --card-foreground: 20 12% 16%;
     --popover: 0 0% 100%;
     --popover-foreground: 20 12% 16%;
-    --primary: 12 55% 61%;
+    --primary: 352 29% 70%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 30 45% 65%;
+    --secondary: 342 30% 78%;
     --secondary-foreground: 20 12% 16%;
-    --muted: 36 25% 92%;
+    --muted: 340 30% 93%;
     --muted-foreground: 20 8% 40%;
-    --accent: 76 26% 48%;
+    --accent: 260 22% 63%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 30 20% 88%;
-    --input: 30 20% 88%;
-    --ring: 12 55% 61%;
+    --border: 340 20% 90%;
+    --input: 340 20% 90%;
+    --ring: 352 29% 70%;
     --radius: 1.5rem;
 }
 
@@ -70,42 +70,42 @@
     background: #ffffff;
     border-radius: 32px;
     box-shadow:
-        0 30px 60px rgba(138, 115, 104, 0.14),
-        inset 0 -8px 16px rgba(138, 115, 104, 0.09),
+        0 30px 60px rgba(138, 115, 130, 0.14),
+        inset 0 -8px 16px rgba(138, 115, 130, 0.09),
         inset 0 8px 16px rgba(255, 255, 255, 0.9);
 }
 
 .clay-card-cream {
-    background: #f3ebdc;
+    background: #f5ebf0;
     border-radius: 32px;
     box-shadow:
-        0 30px 60px rgba(138, 115, 104, 0.16),
-        inset 0 -8px 16px rgba(138, 115, 104, 0.12),
+        0 30px 60px rgba(138, 115, 130, 0.16),
+        inset 0 -8px 16px rgba(138, 115, 130, 0.12),
         inset 0 8px 16px rgba(255, 255, 255, 0.7);
 }
 
 .clay-btn-primary {
-    background: linear-gradient(180deg, #dc8a76 0%, #d17b67 60%, #b96654 100%);
+    background: linear-gradient(180deg, #d9aab0 0%, #c99aa0 60%, #b07a85 100%);
     color: #fff;
     font-weight: 600;
     border-radius: 999px;
     box-shadow:
-        0 12px 24px rgba(209, 123, 103, 0.35),
+        0 12px 24px rgba(201, 154, 160, 0.35),
         inset 0 -4px 8px rgba(139, 41, 86, 0.25),
         inset 0 4px 8px rgba(255, 255, 255, 0.55);
     transition: transform 150ms ease, box-shadow 150ms ease;
 }
-.clay-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 30px rgba(209, 123, 103, 0.4), inset 0 -4px 8px rgba(139, 41, 86, 0.25), inset 0 4px 8px rgba(255, 255, 255, 0.6); }
-.clay-btn-primary:active { transform: translateY(2px) scale(0.98); box-shadow: 0 4px 8px rgba(209, 123, 103, 0.3), inset 0 4px 8px rgba(139, 41, 86, 0.3); }
+.clay-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 30px rgba(201, 154, 160, 0.4), inset 0 -4px 8px rgba(139, 41, 86, 0.25), inset 0 4px 8px rgba(255, 255, 255, 0.6); }
+.clay-btn-primary:active { transform: translateY(2px) scale(0.98); box-shadow: 0 4px 8px rgba(201, 154, 160, 0.3), inset 0 4px 8px rgba(139, 41, 86, 0.3); }
 
 .clay-btn-olive {
-    background: linear-gradient(180deg, #9caf6b 0%, #8a9a5b 60%, #6f7e46 100%);
+    background: linear-gradient(180deg, #b5a5c9 0%, #9b8bb4 60%, #7b6b9a 100%);
     color: #fff;
     font-weight: 600;
     border-radius: 999px;
     box-shadow:
-        0 12px 24px rgba(138, 154, 91, 0.35),
-        inset 0 -4px 8px rgba(60, 78, 30, 0.28),
+        0 12px 24px rgba(155, 139, 180, 0.35),
+        inset 0 -4px 8px rgba(80, 60, 110, 0.28),
         inset 0 4px 8px rgba(255, 255, 255, 0.55);
     transition: transform 150ms ease, box-shadow 150ms ease;
 }
@@ -113,13 +113,13 @@
 .clay-btn-olive:active { transform: translateY(2px) scale(0.98); }
 
 .clay-btn-ochre {
-    background: linear-gradient(180deg, #e3b787 0%, #d4a373 60%, #b8895b 100%);
+    background: linear-gradient(180deg, #e8c4d0 0%, #d9b5c0 60%, #b8909e 100%);
     color: #2e2825;
     font-weight: 600;
     border-radius: 999px;
     box-shadow:
-        0 12px 24px rgba(212, 163, 115, 0.35),
-        inset 0 -4px 8px rgba(120, 80, 40, 0.28),
+        0 12px 24px rgba(217, 181, 192, 0.35),
+        inset 0 -4px 8px rgba(140, 90, 110, 0.28),
         inset 0 4px 8px rgba(255, 255, 255, 0.65);
     transition: transform 150ms ease, box-shadow 150ms ease;
 }
@@ -132,8 +132,8 @@
     font-weight: 600;
     border-radius: 999px;
     box-shadow:
-        0 10px 20px rgba(138, 115, 104, 0.12),
-        inset 0 -3px 6px rgba(138, 115, 104, 0.08),
+        0 10px 20px rgba(138, 115, 130, 0.12),
+        inset 0 -3px 6px rgba(138, 115, 130, 0.08),
         inset 0 3px 6px rgba(255, 255, 255, 0.9);
     transition: transform 150ms ease, box-shadow 150ms ease;
 }
@@ -144,10 +144,10 @@
     background: #ffffff;
     border-radius: 20px;
     box-shadow:
-        inset 0 4px 10px rgba(138, 115, 104, 0.12),
+        inset 0 4px 10px rgba(138, 115, 130, 0.12),
         inset 0 -2px 4px rgba(255, 255, 255, 0.9),
-        0 1px 2px rgba(138, 115, 104, 0.04);
-    border: 1px solid rgba(138, 115, 104, 0.08);
+        0 1px 2px rgba(138, 115, 130, 0.04);
+    border: 1px solid rgba(138, 115, 130, 0.08);
     padding: 14px 18px;
     font-family: 'Outfit', sans-serif;
     color: var(--ls-ink);
@@ -157,9 +157,9 @@
 }
 .clay-input:focus {
     box-shadow:
-        inset 0 4px 10px rgba(138, 115, 104, 0.14),
+        inset 0 4px 10px rgba(138, 115, 130, 0.14),
         inset 0 -2px 4px rgba(255, 255, 255, 0.9),
-        0 0 0 4px rgba(209, 123, 103, 0.18);
+        0 0 0 4px rgba(201, 154, 160, 0.18);
 }
 
 .clay-pill {
@@ -170,8 +170,8 @@
     font-weight: 600;
     color: var(--ls-deep);
     box-shadow:
-        0 8px 16px rgba(138, 115, 104, 0.12),
-        inset 0 -2px 4px rgba(138, 115, 104, 0.08),
+        0 8px 16px rgba(138, 115, 130, 0.12),
+        inset 0 -2px 4px rgba(138, 115, 130, 0.08),
         inset 0 2px 4px rgba(255, 255, 255, 0.9);
 }
 

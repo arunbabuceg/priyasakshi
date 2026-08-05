@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from ..config import settings
-from ..db import get_db
+from ..db import get_db, serialize_doc
 from ..models.auth import UserCreate, UserOut
 from . import security
 from .email_service import email_service
@@ -84,7 +84,7 @@ class AuthService:
         await get_db().users.update_one({"id": user_id}, {"$unset": {"refresh_token": ""}})
 
     async def get_user_by_id(self, user_id: str) -> Optional[dict]:
-        return await get_db().users.find_one({"id": user_id})
+        return serialize_doc(await get_db().users.find_one({"id": user_id}))
 
     async def update_profile(self, user_id: str, name: Optional[str] = None, phone: Optional[str] = None) -> Optional[dict]:
         update_fields: dict = {}

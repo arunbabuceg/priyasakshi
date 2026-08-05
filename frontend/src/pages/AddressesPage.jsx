@@ -85,7 +85,7 @@ export default function AddressesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] relative overflow-hidden px-4 py-28 md:py-32">
+    <div className="min-h-screen bg-[#FAF5F8] relative overflow-hidden px-4 py-28 md:py-32">
       <ClayShapes variant="hero" />
       <div className="relative max-w-3xl mx-auto">
         <button
@@ -117,8 +117,8 @@ export default function AddressesPage() {
               <div
                 className="w-20 h-20 rounded-full flex items-center justify-center mb-5"
                 style={{
-                  background: 'linear-gradient(180deg, #B4C77E 0%, #6F7E46 100%)',
-                  boxShadow: '0 20px 30px rgba(110,140,70,0.3), inset 0 -6px 12px rgba(40,60,20,0.25), inset 0 6px 12px rgba(255,255,255,0.5)',
+                  background: 'linear-gradient(180deg, #C9B5DD 0%, #7B6B9A 100%)',
+                  boxShadow: '0 20px 30px rgba(140,110,170,0.3), inset 0 -6px 12px rgba(60,40,80,0.25), inset 0 6px 12px rgba(255,255,255,0.5)',
                 }}
               >
                 <MapPin className="w-9 h-9 text-white" />
@@ -144,7 +144,7 @@ export default function AddressesPage() {
                       <div className="flex gap-3 min-w-0">
                         <div
                           className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
-                          style={{ background: '#fff', boxShadow: 'inset 0 -3px 6px rgba(138,115,104,0.15), inset 0 3px 6px rgba(255,255,255,0.9)' }}
+                          style={{ background: '#fff', boxShadow: 'inset 0 -3px 6px rgba(138,115,130,0.15), inset 0 3px 6px rgba(255,255,255,0.9)' }}
                         >
                           <MapPin className="w-4 h-4 text-[#8B2956]" />
                         </div>

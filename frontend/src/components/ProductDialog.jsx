@@ -33,7 +33,7 @@ export default function ProductDialog({ product, open, onOpenChange }) {
         </VisuallyHidden.Root>
         <div className="clay-card overflow-hidden">
           <div className="grid md:grid-cols-2 gap-0">
-            <div className="aspect-square md:aspect-auto p-6" style={{ background: '#F3EBDC' }}>
+            <div className="aspect-square md:aspect-auto p-6" style={{ background: '#F5EBF0' }}>
               <ProductGallery images={product.images} alt={product.name} testId="product-dialog-gallery" />
             </div>
             <div className="p-8 flex flex-col">

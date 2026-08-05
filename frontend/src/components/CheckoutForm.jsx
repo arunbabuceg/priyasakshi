@@ -294,7 +294,7 @@ export default function CheckoutForm({ onBack }) {
               <span className="text-[#2E2825]/70">Shipping</span>
               <span className="font-semibold">{shipping === 0 ? 'FREE' : formatINR(shipping)}</span>
             </div>
-            <div className="pt-2 border-t border-[#E6D9BF] flex items-baseline justify-between">
+            <div className="pt-2 border-t border-[#E0D2DD] flex items-baseline justify-between">
               <span className="font-serif-display text-xl">Total</span>
               <span className="font-serif-display text-2xl font-semibold text-[#8B2956]" data-testid="checkout-total">
                 {formatINR(total)}

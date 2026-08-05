@@ -37,7 +37,7 @@ export default function Ingredients() {
             <h2 className="mt-4 font-serif-display text-4xl sm:text-5xl text-[#2E2825] leading-tight">
               Every drop —
               <br />
-              <em className="italic text-[#8A9A5B]">a garden.</em>
+              <em className="italic text-[#9B8BB4]">a garden.</em>
             </h2>
             <p className="mt-6 text-base text-[#2E2825]/75 leading-relaxed">
               Our Tamarai Hair Oil is cold-infused with{' '}
@@ -47,7 +47,7 @@ export default function Ingredients() {
             </p>
             <div className="mt-6 flex gap-3">
               <div className="clay-card-cream px-5 py-3 flex items-center gap-2" data-testid="ingredients-count">
-                <Leaf className="w-4 h-4 text-[#8A9A5B]" />
+                <Leaf className="w-4 h-4 text-[#9B8BB4]" />
                 <span className="font-serif-display text-xl text-[#8B2956]">{items.length || 103}</span>
                 <span className="text-xs uppercase tracking-widest text-[#2E2825]/60">herbs</span>
               </div>
@@ -69,7 +69,7 @@ export default function Ingredients() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 text-sm text-[#2E2825]/85">
                 {visible.map((it, i) => (
                   <div key={it} className="flex items-baseline gap-2 py-1" data-testid={`ingredient-${i}`}>
-                    <span className="font-serif-display text-[#8A9A5B] w-7 text-right shrink-0">
+                    <span className="font-serif-display text-[#9B8BB4] w-7 text-right shrink-0">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <span>{it}</span>
@@ -77,7 +77,7 @@ export default function Ingredients() {
                 ))}
               </div>
               {items.length > 24 && (
-                <div className="mt-6 pt-6 border-t border-[#EFE6D6] text-center">
+                <div className="mt-6 pt-6 border-t border-[#EADFE5] text-center">
                   <button
                     onClick={() => setExpanded((v) => !v)}
                     className="clay-btn-olive h-11 px-6 text-sm"

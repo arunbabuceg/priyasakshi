@@ -6,16 +6,16 @@ import { useAuth } from '@/context/AuthContext';
 import { ClayShapes } from '@/components/ClayShapes';
 
 const NAV_CARDS = [
-  { to: '/account/orders', icon: Package, label: 'My Orders', desc: 'Track and review your purchases', accent: '#D17B67', bg: '#F7CFC1' },
+  { to: '/account/orders', icon: Package, label: 'My Orders', desc: 'Track and review your purchases', accent: '#C99AA0', bg: '#F5D9DD' },
   { to: '/account/profile', icon: UserIcon, label: 'Profile', desc: 'Update your name, phone and password', accent: '#8B2956', bg: '#EBB5C8' },
-  { to: '/account/addresses', icon: MapPin, label: 'Saved Addresses', desc: 'Manage shipping addresses', accent: '#8A9A5B', bg: '#D2DFA8' },
+  { to: '/account/addresses', icon: MapPin, label: 'Saved Addresses', desc: 'Manage shipping addresses', accent: '#9B8BB4', bg: '#E4D9F0' },
 ];
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] relative overflow-hidden px-4 py-28 md:py-32">
+    <div className="min-h-screen bg-[#FAF5F8] relative overflow-hidden px-4 py-28 md:py-32">
       <ClayShapes variant="hero" />
       <div className="relative max-w-5xl mx-auto">
         <Link
@@ -83,7 +83,7 @@ export default function DashboardPage() {
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
                   style={{
-                    background: 'linear-gradient(180deg, #F3D2A8 0%, #D4A373 100%)',
+                    background: 'linear-gradient(180deg, #E8C4D0 0%, #D9B5C0 100%)',
                     boxShadow: 'inset 0 -4px 8px rgba(0,0,0,0.08), inset 0 4px 8px rgba(255,255,255,0.5)',
                   }}
                 >

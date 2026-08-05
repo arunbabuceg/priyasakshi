@@ -1,5 +1,5 @@
 import React from 'react';
-import { Instagram, MessageCircle } from 'lucide-react';
+import { Drama as Instagram, MessageCircle } from 'lucide-react';
 import { site } from '@/data/site';
 
 const SHOP_LINKS = [
@@ -16,7 +16,7 @@ const HELP_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="relative bg-[#2E2825] text-[#FAF7F2] py-14 mt-10 overflow-hidden" data-testid="site-footer">
+    <footer className="relative bg-[#2E2825] text-[#FAF5F8] py-14 mt-10 overflow-hidden" data-testid="site-footer">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         <div className="grid md:grid-cols-4 gap-10">
           <div className="md:col-span-2">
@@ -45,8 +45,8 @@ export default function Footer() {
                 rel="noreferrer"
                 className="w-11 h-11 rounded-2xl flex items-center justify-center"
                 style={{
-                  background: 'linear-gradient(180deg, #B4C77E 0%, #6F7E46 100%)',
-                  boxShadow: 'inset 0 -3px 6px rgba(30,50,10,0.3), inset 0 3px 6px rgba(255,255,255,0.35)',
+                  background: 'linear-gradient(180deg, #C9B5DD 0%, #7B6B9A 100%)',
+                  boxShadow: 'inset 0 -3px 6px rgba(50,30,60,0.3), inset 0 3px 6px rgba(255,255,255,0.35)',
                 }}
                 data-testid="footer-whatsapp"
                 aria-label="WhatsApp"

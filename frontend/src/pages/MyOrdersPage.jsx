@@ -19,21 +19,21 @@ const formatDate = (iso) => {
 };
 
 const PAYMENT_BADGE = {
-  paid: { bg: '#D2DFA8', color: '#6F7E46', label: 'Paid' },
-  pending: { bg: '#F3D2A8', color: '#A06A2C', label: 'Pending' },
-  unpaid: { bg: '#F7CFC1', color: '#8B2956', label: 'Unpaid' },
-  failed: { bg: '#F7CFC1', color: '#8B2956', label: 'Failed' },
+  paid: { bg: '#E4D9F0', color: '#7B6B9A', label: 'Paid' },
+  pending: { bg: '#E8C4D0', color: '#8B2956', label: 'Pending' },
+  unpaid: { bg: '#F5D9DD', color: '#8B2956', label: 'Unpaid' },
+  failed: { bg: '#F5D9DD', color: '#8B2956', label: 'Failed' },
 };
 
 const STATUS_BADGE = {
-  received: { bg: '#F3EBDC', color: '#8A9A5B', label: 'Received' },
-  pending_payment: { bg: '#F3D2A8', color: '#A06A2C', label: 'Awaiting Payment' },
-  paid: { bg: '#D2DFA8', color: '#6F7E46', label: 'Paid' },
+  received: { bg: '#F5EBF0', color: '#9B8BB4', label: 'Received' },
+  pending_payment: { bg: '#E8C4D0', color: '#8B2956', label: 'Awaiting Payment' },
+  paid: { bg: '#E4D9F0', color: '#7B6B9A', label: 'Paid' },
   shipped: { bg: '#EBA8C5', color: '#8B2956', label: 'Shipped' },
-  cancelled: { bg: '#F7CFC1', color: '#8B2956', label: 'Cancelled' },
+  cancelled: { bg: '#F5D9DD', color: '#8B2956', label: 'Cancelled' },
 };
 
-const badge = (map, key) => map[key] || { bg: '#F3EBDC', color: '#2E2825', label: key };
+const badge = (map, key) => map[key] || { bg: '#F5EBF0', color: '#2E2825', label: key };
 
 export default function MyOrdersPage() {
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ export default function MyOrdersPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] relative overflow-hidden px-4 py-28 md:py-32">
+    <div className="min-h-screen bg-[#FAF5F8] relative overflow-hidden px-4 py-28 md:py-32">
       <ClayShapes variant="hero" />
       <div className="relative max-w-4xl mx-auto">
         <button
@@ -75,8 +75,8 @@ export default function MyOrdersPage() {
               <div
                 className="w-20 h-20 rounded-full flex items-center justify-center mb-5"
                 style={{
-                  background: 'linear-gradient(180deg, #F3D2A8 0%, #D4A373 100%)',
-                  boxShadow: '0 20px 30px rgba(180,140,90,0.3), inset 0 -6px 12px rgba(100,60,20,0.25), inset 0 6px 12px rgba(255,255,255,0.5)',
+                  background: 'linear-gradient(180deg, #E8C4D0 0%, #D9B5C0 100%)',
+                  boxShadow: '0 20px 30px rgba(180,140,160,0.3), inset 0 -6px 12px rgba(100,60,80,0.25), inset 0 6px 12px rgba(255,255,255,0.5)',
                 }}
               >
                 <Package className="w-9 h-9 text-white" />
@@ -111,7 +111,7 @@ export default function MyOrdersPage() {
                     >
                       <div
                         className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: '#fff', boxShadow: 'inset 0 -3px 6px rgba(138,115,104,0.15), inset 0 3px 6px rgba(255,255,255,0.9)' }}
+                        style={{ background: '#fff', boxShadow: 'inset 0 -3px 6px rgba(138,115,130,0.15), inset 0 3px 6px rgba(255,255,255,0.9)' }}
                       >
                         <Package className="w-5 h-5 text-[#8B2956]" />
                       </div>

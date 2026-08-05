@@ -12,7 +12,7 @@ import { categories } from '@/data/categories';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#2E2825] font-sans-body">
+    <div className="min-h-screen bg-[#FAF5F8] text-[#2E2825] font-sans-body">
       <Nav />
       <main>
         <Hero />

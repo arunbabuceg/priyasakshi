@@ -12,7 +12,7 @@ import { ClayShapes, KolamStar } from '@/components/ClayShapes';
 export default function SuccessPage() {
   return (
     <div
-      className="min-h-screen bg-[#FAF7F2] relative overflow-hidden flex items-center justify-center px-4 py-20"
+      className="min-h-screen bg-[#FAF5F8] relative overflow-hidden flex items-center justify-center px-4 py-20"
       data-testid="success-page"
     >
       <ClayShapes variant="hero" />
@@ -23,13 +23,13 @@ export default function SuccessPage() {
         transition={{ duration: 0.6 }}
       >
         <div className="flex justify-center mb-4 animate-spin-slow">
-          <KolamStar size={70} color="#8A9A5B" />
+          <KolamStar size={70} color="#9B8BB4" />
         </div>
         <div
           className="w-20 h-20 rounded-full mx-auto flex items-center justify-center"
           style={{
-            background: 'linear-gradient(180deg, #F3D2A8 0%, #D4A373 100%)',
-            boxShadow: '0 20px 30px rgba(180,140,90,0.3), inset 0 -6px 12px rgba(100,60,20,0.25), inset 0 6px 12px rgba(255,255,255,0.5)',
+            background: 'linear-gradient(180deg, #E8C4D0 0%, #D9B5C0 100%)',
+            boxShadow: '0 20px 30px rgba(180,140,160,0.3), inset 0 -6px 12px rgba(100,60,80,0.25), inset 0 6px 12px rgba(255,255,255,0.5)',
           }}
           data-testid="success-icon"
         >

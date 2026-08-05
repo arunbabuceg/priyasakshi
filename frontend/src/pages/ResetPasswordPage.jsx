@@ -27,7 +27,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] relative overflow-hidden flex items-center justify-center px-4 py-20">
+    <div className="min-h-screen bg-[#FAF5F8] relative overflow-hidden flex items-center justify-center px-4 py-20">
       <ClayShapes variant="hero" />
       <motion.div
         initial={{ opacity: 0, y: 30, scale: 0.95 }}

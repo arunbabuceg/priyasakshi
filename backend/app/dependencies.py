@@ -52,13 +52,23 @@ async def get_optional_user(request: Request, authorization: Optional[str] = Hea
 
 def set_auth_cookies(response, access_token: str, refresh_token: str) -> None:
     response.set_cookie(
-        ACCESS_COOKIE, access_token,
-        httponly=True, samesite="lax", secure=False, path="/", max_age=60 * 60 * 24 * 30,
-    )
+    ACCESS_COOKIE,
+    access_token,
+    httponly=True,
+    secure=True,
+    samesite="none",
+    path="/",
+    max_age=60 * 60 * 24 * 30,
+)
     response.set_cookie(
-        REFRESH_COOKIE, refresh_token,
-        httponly=True, samesite="lax", secure=False, path="/", max_age=60 * 60 * 24 * 30,
-    )
+    REFRESH_COOKIE,
+    refresh_token,
+    httponly=True,
+    secure=True,
+    samesite="none",
+    path="/",
+    max_age=60 * 60 * 24 * 30,
+)
 
 
 def clear_auth_cookies(response) -> None:

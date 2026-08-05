@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     smtp_pass: str = Field("", alias="SMTP_PASS")
 
     # ---- Resend ----
-resend_api_key: str = Field("", alias="re_FNzrKqky_PFJotgmRfKH2rhz3kky89TBP")
+    resend_api_key: str = Field("", alias="RESEND_API_KEY")
 
     # ---- Payments (Razorpay) ----
     razorpay_key_id: str = Field("", alias="RAZORPAY_KEY_ID")
@@ -56,10 +56,18 @@ resend_api_key: str = Field("", alias="re_FNzrKqky_PFJotgmRfKH2rhz3kky89TBP")
     # ---- Auth (JWT) ----
     jwt_secret: str = Field("change-me-in-production", alias="JWT_SECRET")
     jwt_algorithm: str = Field("HS256", alias="JWT_ALGORITHM")
-    access_token_expire_minutes: int = Field(60 * 24, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
-    refresh_token_expire_days: int = Field(30, alias="REFRESH_TOKEN_EXPIRE_DAYS")
-    verification_token_expire_hours: int = Field(24, alias="VERIFICATION_TOKEN_EXPIRE_HOURS")
-    password_reset_token_expire_hours: int = Field(1, alias="PASSWORD_RESET_TOKEN_EXPIRE_HOURS")
+    access_token_expire_minutes: int = Field(
+        60 * 24, alias="ACCESS_TOKEN_EXPIRE_MINUTES"
+    )
+    refresh_token_expire_days: int = Field(
+        30, alias="REFRESH_TOKEN_EXPIRE_DAYS"
+    )
+    verification_token_expire_hours: int = Field(
+        24, alias="VERIFICATION_TOKEN_EXPIRE_HOURS"
+    )
+    password_reset_token_expire_hours: int = Field(
+        1, alias="PASSWORD_RESET_TOKEN_EXPIRE_HOURS"
+    )
 
     @property
     def cors_origins_list(self) -> List[str]:

@@ -36,23 +36,28 @@ class EmailService:
         if not self._enabled:
             logger.info("[email disabled] to=%s subject=%s", to, subject)
             return
+
         recipients = [to] if isinstance(to, str) else to
+
         message = EmailMessage()
         message["From"] = f"{settings.brand_name} <{settings.smtp_user}>"
         message["To"] = ", ".join(recipients)
         message["Subject"] = subject
         message.set_content("This email requires an HTML client.")
         message.add_alternative(html, subtype="html")
+
         try:
-      await aiosmtplib.send(
-    message,
-    hostname=settings.smtp_host,
-    port=settings.smtp_port,
-    use_tls=True,
-    username=settings.smtp_user,
-    password=settings.smtp_pass,
-)
+            await aiosmtplib.send(
+                message,
+                hostname=settings.smtp_host,
+                port=settings.smtp_port,
+                use_tls=True,
+                username=settings.smtp_user,
+                password=settings.smtp_pass,
+                timeout=30,
+            )
             logger.info("Email sent to=%s subject=%s", recipients, subject)
+
         except Exception as exc:
             logger.exception("Failed to send email: %s", exc)
 
@@ -81,7 +86,11 @@ class EmailService:
             f"<pre style='white-space:pre-wrap;border-left:3px solid #8B2956;padding-left:12px'>{message}</pre>"
             f"</div>"
         )
-        await self._send(settings.contact_to_email, f"[{settings.brand_name}] Contact — {name}", html)
+        await self._send(
+            settings.contact_to_email,
+            f"[{settings.brand_name}] Contact — {name}",
+            html,
+        )
 
     async def send_owner_order_notification(self, order: dict) -> None:
         from .templates import owner_order_html
@@ -96,7 +105,11 @@ class EmailService:
     async def send_order_confirmation(self, order: dict) -> None:
         from .templates import customer_order_html
 
-        html = customer_order_html(settings.brand_name, order, settings.contact_to_email)
+        html = customer_order_html(
+            settings.brand_name,
+            order,
+            settings.contact_to_email,
+        )
         await self._send(
             order["customer_email"],
             f"Order received — {settings.brand_name}",
@@ -108,14 +121,22 @@ class EmailService:
 
         verify_url = f"{settings.frontend_url}/verify-email?token={token}"
         html = email_verification_html(settings.brand_name, verify_url)
-        await self._send(to_email, f"Verify your email — {settings.brand_name}", html)
+        await self._send(
+            to_email,
+            f"Verify your email — {settings.brand_name}",
+            html,
+        )
 
     async def send_password_reset(self, to_email: str, token: str) -> None:
         from .templates import password_reset_html
 
         reset_url = f"{settings.frontend_url}/reset-password?token={token}"
         html = password_reset_html(settings.brand_name, reset_url)
-        await self._send(to_email, f"Reset your password — {settings.brand_name}", html)
+        await self._send(
+            to_email,
+            f"Reset your password — {settings.brand_name}",
+            html,
+        )
 
 
 email_service = EmailService()

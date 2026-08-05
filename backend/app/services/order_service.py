@@ -14,7 +14,6 @@ from pymongo import ReturnDocument
 
 from ..db import get_db
 from ..models.order import OrderCreate
-from .email_service import email_service
 
 logger = logging.getLogger("priya_sakshi.orders")
 
@@ -39,20 +38,25 @@ class OrderService:
         }
 
         await get_db().orders.insert_one(order)
+
         logger.info(
             "Order recorded id=%s email=%s items=%d total=%s",
-            order["id"], order["customer_email"], len(order["items"]), order["total"],
+            order["id"],
+            order["customer_email"],
+            len(order["items"]),
+            order["total"],
         )
 
-        # Notify the store owner and confirm to the customer (best-effort).
-        await email_service.send_owner_order_notification(order)
-        await email_service.send_order_confirmation(order)
         return order
 
     async def get_order(self, order_id: str) -> dict | None:
         return await get_db().orders.find_one({"id": order_id})
 
-    async def mark_payment_initiated(self, order_id: str, razorpay_order_id: str) -> None:
+    async def mark_payment_initiated(
+        self,
+        order_id: str,
+        razorpay_order_id: str,
+    ) -> None:
         """Called right after a Razorpay order is created for this order."""
         await get_db().orders.update_one(
             {"id": order_id},
@@ -69,7 +73,11 @@ class OrderService:
         )
 
     async def mark_payment_verified(
-        self, *, order_id: str, razorpay_order_id: str, razorpay_payment_id: str
+        self,
+        *,
+        order_id: str,
+        razorpay_order_id: str,
+        razorpay_payment_id: str,
     ) -> dict | None:
         """Called once the Razorpay signature has been verified."""
         return await get_db().orders.find_one_and_update(

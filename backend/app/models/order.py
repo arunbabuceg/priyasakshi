@@ -31,7 +31,7 @@ class ShippingAddress(BaseModel):
 class OrderCreate(BaseModel):
     customer_name: str
     customer_email: EmailStr
-    phone: Optional[str] = None
+    phone: str = Field(..., min_length=10, max_length=15)
     items: List[OrderItem]
     shipping: Optional[ShippingAddress] = None
     currency: str = "INR"

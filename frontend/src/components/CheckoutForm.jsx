@@ -173,7 +173,7 @@ export default function CheckoutForm({ onBack }) {
               autoComplete="email"
             />
             <Field
-              label="Phone (optional)"
+              label="Phone Number *"
               value={form.phone}
               onChange={handleChange('phone')}
               testId="checkout-phone"

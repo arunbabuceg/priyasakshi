@@ -39,14 +39,14 @@ class EmailService:
         recipients = [to] if isinstance(to, str) else to
 
         try:
-            params = {
+            params: resend.Emails.SendParams = {
                 "from": f"{settings.brand_name} <{settings.brand_from_email}>",
                 "to": recipients,
                 "subject": subject,
                 "html": html,
             }
 
-            await resend.Emails.send(params)
+            response = resend.Emails.send(params)
 
             logger.info(
                 "Email sent successfully to=%s response=%s",

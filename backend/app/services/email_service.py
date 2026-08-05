@@ -44,14 +44,14 @@ class EmailService:
         message.set_content("This email requires an HTML client.")
         message.add_alternative(html, subtype="html")
         try:
-            await aiosmtplib.send(
-                message,
-                hostname=settings.smtp_host,
-                port=settings.smtp_port,
-                start_tls=True,
-                username=settings.smtp_user,
-                password=settings.smtp_pass,
-            )
+      await aiosmtplib.send(
+    message,
+    hostname=settings.smtp_host,
+    port=settings.smtp_port,
+    use_tls=True,
+    username=settings.smtp_user,
+    password=settings.smtp_pass,
+)
             logger.info("Email sent to=%s subject=%s", recipients, subject)
         except Exception as exc:
             logger.exception("Failed to send email: %s", exc)

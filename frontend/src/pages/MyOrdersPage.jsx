@@ -5,6 +5,7 @@ import { ArrowLeft, Package, Loader as Loader2 } from 'lucide-react';
 import { getMyOrders } from '@/services/orderHistoryService';
 import { formatINR } from '@/lib/format';
 import { ClayShapes } from '@/components/ClayShapes';
+import { getPaymentBadge, getOrderBadge } from '@/lib/orderBadges';
 
 const formatDate = (iso) => {
   try {
@@ -18,22 +19,7 @@ const formatDate = (iso) => {
   }
 };
 
-const PAYMENT_BADGE = {
-  paid: { bg: '#E4D9F0', color: '#7B6B9A', label: 'Paid' },
-  pending: { bg: '#E8C4D0', color: '#8B2956', label: 'Pending' },
-  unpaid: { bg: '#F5D9DD', color: '#8B2956', label: 'Unpaid' },
-  failed: { bg: '#F5D9DD', color: '#8B2956', label: 'Failed' },
-};
 
-const STATUS_BADGE = {
-  received: { bg: '#F5EBF0', color: '#9B8BB4', label: 'Received' },
-  pending_payment: { bg: '#E8C4D0', color: '#8B2956', label: 'Awaiting Payment' },
-  paid: { bg: '#E4D9F0', color: '#7B6B9A', label: 'Paid' },
-  shipped: { bg: '#EBA8C5', color: '#8B2956', label: 'Shipped' },
-  cancelled: { bg: '#F5D9DD', color: '#8B2956', label: 'Cancelled' },
-};
-
-const badge = (map, key) => map[key] || { bg: '#F5EBF0', color: '#2E2825', label: key };
 
 export default function MyOrdersPage() {
   const navigate = useNavigate();
@@ -95,8 +81,9 @@ export default function MyOrdersPage() {
           ) : (
             <ul className="mt-8 space-y-4">
               {orders.map((o, i) => {
-                const pay = badge(PAYMENT_BADGE, o.payment_status);
-                const st = badge(STATUS_BADGE, o.status);
+                const pay = getPaymentBadge(o.payment_status);
+                const st = getOrderBadge(o.status);
+                const duplicate = pay.label.toLowerCase() === st.label.toLowerCase();
                 return (
                   <motion.li
                     key={o.id}
@@ -123,19 +110,23 @@ export default function MyOrdersPage() {
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className="clay-pill"
+                          className="clay-pill inline-flex items-center gap-1"
                           style={{ background: pay.bg, color: pay.color }}
                           data-testid={`order-payment-${o.id}`}
                         >
+                          <pay.Icon className="w-3.5 h-3.5" />
                           {pay.label}
                         </span>
-                        <span
-                          className="clay-pill"
-                          style={{ background: st.bg, color: st.color }}
-                          data-testid={`order-status-${o.id}`}
-                        >
-                          {st.label}
-                        </span>
+                        {!duplicate && (
+                          <span
+                            className="clay-pill inline-flex items-center gap-1"
+                            style={{ background: st.bg, color: st.color }}
+                            data-testid={`order-status-${o.id}`}
+                          >
+                            <st.Icon className="w-3.5 h-3.5" />
+                            {st.label}
+                          </span>
+                        )}
                         <span className="font-serif-display text-xl text-[#8B2956] ml-1" data-testid={`order-amount-${o.id}`}>
                           {formatINR(o.total)}
                         </span>

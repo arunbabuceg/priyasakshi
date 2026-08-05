@@ -5,6 +5,7 @@ import { ArrowLeft, MapPin, Truck, CreditCard, Loader as Loader2, Package } from
 import { getOrder } from '@/services/orderHistoryService';
 import { formatINR } from '@/lib/format';
 import { ClayShapes } from '@/components/ClayShapes';
+import { getPaymentBadge, getOrderBadge } from '@/lib/orderBadges';
 
 const formatDate = (iso) => {
   try {
@@ -18,15 +19,6 @@ const formatDate = (iso) => {
   } catch {
     return iso;
   }
-};
-
-const PAYMENT_LABEL = { paid: 'Paid', pending: 'Pending', unpaid: 'Unpaid', failed: 'Failed' };
-const STATUS_LABEL = {
-  received: 'Received',
-  pending_payment: 'Awaiting Payment',
-  paid: 'Paid',
-  shipped: 'Shipped',
-  cancelled: 'Cancelled',
 };
 
 export default function OrderDetailsPage() {
@@ -53,6 +45,9 @@ export default function OrderDetailsPage() {
 
   const shipping = order?.shipping || {};
   const timeline = order?.timeline || [];
+  const pay = getPaymentBadge(order?.payment_status);
+  const st = getOrderBadge(order?.status);
+  const duplicate = pay.label.toLowerCase() === st.label.toLowerCase();
 
   return (
     <div className="min-h-screen bg-[#FAF5F8] relative overflow-hidden px-4 py-28 md:py-32">
@@ -104,12 +99,24 @@ export default function OrderDetailsPage() {
                 </div>
               </div>
               <div className="mt-5 flex flex-wrap gap-2">
-                <span className="clay-pill" style={{ background: '#F5EBF0', color: '#9B8BB4' }} data-testid="order-detail-status">
-                  {STATUS_LABEL[order.status] || order.status}
+                <span
+                  className="clay-pill inline-flex items-center gap-1"
+                  style={{ background: pay.bg, color: pay.color }}
+                  data-testid="order-detail-payment"
+                >
+                  <pay.Icon className="w-3.5 h-3.5" />
+                  {pay.label}
                 </span>
-                <span className="clay-pill" style={{ background: '#E8C4D0', color: '#8B2956' }} data-testid="order-detail-payment">
-                  {PAYMENT_LABEL[order.payment_status] || order.payment_status}
-                </span>
+                {!duplicate && (
+                  <span
+                    className="clay-pill inline-flex items-center gap-1"
+                    style={{ background: st.bg, color: st.color }}
+                    data-testid="order-detail-status"
+                  >
+                    <st.Icon className="w-3.5 h-3.5" />
+                    {st.label}
+                  </span>
+                )}
               </div>
             </div>
 

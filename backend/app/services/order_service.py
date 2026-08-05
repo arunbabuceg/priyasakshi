@@ -72,8 +72,11 @@ class OrderService:
     async def get_order(self, order_id: str) -> dict | None:
         return await get_db().orders.find_one({"id": order_id})
 
-    async def list_orders_for_user(self, user_id: str) -> list[dict]:
-        cursor = get_db().orders.find({"user_id": user_id}).sort("created_at", -1)
+    async def list_orders_for_user(self, user_id: str, email: str | None = None) -> list[dict]:
+        query: dict = {"user_id": user_id}
+        if email:
+            query = {"$or": [{"user_id": user_id}, {"customer_email": email.lower()}]}
+        cursor = get_db().orders.find(query).sort("created_at", -1)
         return await cursor.to_list(length=None)
 
     async def mark_payment_initiated(

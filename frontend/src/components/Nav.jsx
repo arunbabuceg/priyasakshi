@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { ShoppingBag, Menu, X, User, LogOut, LayoutDashboard, MailCheck, Loader as Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { resendVerification } from '@/services/authService';
 import { site } from '@/data/site';
 
 const NAV_LINKS = [
@@ -22,6 +23,7 @@ export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -41,6 +43,18 @@ export default function Nav() {
     setMobileOpen(false);
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleVerifyEmail = async () => {
+    if (verifying) return;
+    setVerifying(true);
+    const res = await resendVerification();
+    setVerifying(false);
+    if (res.ok) {
+      toast.success(res.data?.message || 'Verification email sent');
+    } else {
+      toast.error(res.error || 'Could not send verification email');
+    }
   };
 
   return (
@@ -119,9 +133,20 @@ export default function Nav() {
                       data-testid="nav-user-menu"
                     >
                       <div className="px-3 py-2 text-xs text-[#2E2825]/60 truncate">{user.email}</div>
-                      {!user.email_verified && (
-                        <div className="px-3 py-1 text-[11px] text-[#8A9A5B]">Verify your email</div>
-                      )}
+                      <button
+                        onClick={handleVerifyEmail}
+                        disabled={verifying}
+                        className="w-full text-left px-3 py-2 rounded-2xl text-sm flex items-center gap-2 disabled:opacity-60"
+                        style={{ color: user.email_verified ? '#8A9A5B' : '#8B2956' }}
+                        data-testid="nav-verify-email-btn"
+                      >
+                        {verifying ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <MailCheck className="w-4 h-4" />
+                        )}
+                        {user.email_verified ? 'Email verified' : 'Verify your email'}
+                      </button>
                       <button
                         onClick={() => { setMenuOpen(false); navigate('/account'); }}
                         className="w-full text-left px-3 py-2 rounded-2xl text-sm text-[#2E2825] hover:bg-[#F3EBDC] flex items-center gap-2"

@@ -44,7 +44,7 @@ async def create_order(payload: OrderCreate, user=Depends(get_optional_user)):
 
 @router.get("/my")
 async def my_orders(user=Depends(get_current_user)):
-    orders = await order_service.list_orders_for_user(user["id"])
+    orders = await order_service.list_orders_for_user(user["id"], email=user.get("email"))
     return {"ok": True, "orders": orders}
 
 

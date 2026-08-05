@@ -62,6 +62,15 @@ export const verifyEmail = async (token) => {
   }
 };
 
+export const resendVerification = async () => {
+  try {
+    const { data } = await apiClient.post('/auth/resend-verification');
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: getErrorMessage(err, 'Could not send verification email') };
+  }
+};
+
 export const forgotPassword = async (email) => {
   try {
     const { data } = await apiClient.post('/auth/forgot-password', { email });

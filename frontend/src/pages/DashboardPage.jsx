@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Package, User as UserIcon, MapPin, LogOut, Mail } from 'lucide-react';
+import { Package, User as UserIcon, MapPin, LogOut, Mail, Hop as Home } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { ClayShapes } from '@/components/ClayShapes';
 
@@ -18,6 +18,13 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#FAF7F2] relative overflow-hidden px-4 py-28 md:py-32">
       <ClayShapes variant="hero" />
       <div className="relative max-w-5xl mx-auto">
+        <Link
+          to="/"
+          className="clay-btn-ghost h-10 px-4 inline-flex items-center gap-2 text-sm mb-6"
+          data-testid="dashboard-back-home"
+        >
+          <Home className="w-4 h-4" /> Back to Home
+        </Link>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -86,6 +86,9 @@ export default function CheckoutForm({ onBack }) {
       if (!form[k] || !form[k].trim()) return `Please fill ${k.replace(/_/g, ' ')}`;
     }
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(form.customer_email)) return 'Please enter a valid email';
+    const digits = (form.phone || '').replace(/\D/g, '');
+    if (!form.phone || !form.phone.trim()) return 'Phone number is required';
+    if (digits.length !== 10) return 'Phone number must be exactly 10 digits';
     return null;
   };
 
@@ -217,6 +220,10 @@ export default function CheckoutForm({ onBack }) {
               onChange={handleChange('phone')}
               testId="checkout-phone"
               autoComplete="tel"
+              maxLength={10}
+              inputMode="numeric"
+              pattern="[0-9]{10}"
+              placeholder="10-digit mobile number"
             />
           </div>
 
@@ -317,7 +324,7 @@ const SectionTitle = ({ children }) => (
   <h4 className="font-serif-display text-lg text-[#8B2956] pt-2">{children}</h4>
 );
 
-const Field = ({ label, value, onChange, type = 'text', testId, autoComplete }) => (
+const Field = ({ label, value, onChange, type = 'text', testId, autoComplete, ...rest }) => (
   <label className="block">
     <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">{label}</span>
     <input
@@ -327,6 +334,7 @@ const Field = ({ label, value, onChange, type = 'text', testId, autoComplete }) 
       onChange={onChange}
       data-testid={testId}
       autoComplete={autoComplete}
+      {...rest}
     />
   </label>
 );

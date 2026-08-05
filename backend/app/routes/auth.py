@@ -95,6 +95,14 @@ async def verify_email(payload: VerifyEmailRequest):
     return MessageResponse(message="Email verified")
 
 
+@router.post("/resend-verification", response_model=MessageResponse)
+async def resend_verification(user=Depends(get_current_user)):
+    ok, message = await auth_service.resend_verification(user["id"])
+    if not ok:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
+    return MessageResponse(message=message)
+
+
 @router.post("/forgot-password", response_model=MessageResponse)
 async def forgot_password(payload: ForgotPasswordRequest):
     await auth_service.request_password_reset(payload.email)

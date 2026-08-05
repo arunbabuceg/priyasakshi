@@ -116,6 +116,20 @@ class AuthService:
         )
         return res.modified_count > 0
 
+    async def resend_verification(self, user_id: str) -> tuple[bool, str]:
+        user = await self.get_user_by_id(user_id)
+        if not user:
+            return False, "User not found"
+        if user.get("email_verified", False):
+            return True, "Email already verified"
+        token = security._create_token(
+            user["id"],
+            timedelta(hours=settings.verification_token_expire_hours),
+            "verify_email",
+        )
+        await email_service.send_email_verification(user["email"], token)
+        return True, "Verification email sent"
+
     async def request_password_reset(self, email: str) -> bool:
         user = await self._user_by_email(email)
         if not user:

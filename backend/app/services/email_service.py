@@ -1,21 +1,20 @@
-"""Email service — Titan SMTP integration.
+"""Email service — Resend integration.
 
 Sends transactional email (newsletter welcome, contact notifications, order
-confirmations) via Titan's SMTP server using aiosmtplib. Credentials come from
-environment variables (SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS) and are
-never hard-coded.
+confirmations, email verification, password reset) via the Resend API.
+The API key comes from the environment variable RESEND_API_KEY and is never
+hard-coded.
 
-If SMTP is not configured (no SMTP_USER / SMTP_PASS), calls are logged and
+If Resend is not configured (no RESEND_API_KEY), calls are logged and
 become no-ops so the rest of the app keeps working during local development.
 """
 
 from __future__ import annotations
 
 import logging
-from email.message import EmailMessage
 from typing import Optional
 
-import aiosmtplib
+import resend
 
 from ..config import settings
 
@@ -24,13 +23,13 @@ logger = logging.getLogger("priya_sakshi.email")
 
 class EmailService:
     def __init__(self) -> None:
-        self._enabled = bool(settings.smtp_user and settings.smtp_pass)
+        self._enabled = bool(settings.resend_api_key)
+
         if self._enabled:
-            logger.info("Titan SMTP email service initialised (user=%s)", settings.smtp_user)
+            resend.api_key = settings.resend_api_key
+            logger.info("Resend email service initialised")
         else:
-            logger.info(
-                "Email service is disabled (set SMTP_USER and SMTP_PASS to enable)"
-            )
+            logger.info("Email service disabled (RESEND_API_KEY missing)")
 
     async def _send(self, to: str | list[str], subject: str, html: str) -> None:
         if not self._enabled:
@@ -39,24 +38,21 @@ class EmailService:
 
         recipients = [to] if isinstance(to, str) else to
 
-        message = EmailMessage()
-        message["From"] = f"{settings.brand_name} <{settings.smtp_user}>"
-        message["To"] = ", ".join(recipients)
-        message["Subject"] = subject
-        message.set_content("This email requires an HTML client.")
-        message.add_alternative(html, subtype="html")
-
         try:
-            await aiosmtplib.send(
-                message,
-                hostname=settings.smtp_host,
-                port=settings.smtp_port,
-                use_tls=True,
-                username=settings.smtp_user,
-                password=settings.smtp_pass,
-                timeout=30,
+            params = {
+                "from": f"{settings.brand_name} <{settings.brand_from_email}>",
+                "to": recipients,
+                "subject": subject,
+                "html": html,
+            }
+
+            await resend.Emails.send(params)
+
+            logger.info(
+                "Email sent successfully to=%s response=%s",
+                recipients,
+                response,
             )
-            logger.info("Email sent to=%s subject=%s", recipients, subject)
 
         except Exception as exc:
             logger.exception("Failed to send email: %s", exc)

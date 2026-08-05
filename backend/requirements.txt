@@ -13,7 +13,7 @@ python-dotenv>=1.1.1
 email-validator>=2.3.0
 python-multipart>=0.0.20
 
-resend>=2.13.0
+resend==2.35.0
 httpx>=0.28.1
 
 # Payments
@@ -30,4 +30,3 @@ aiosmtplib>=4.0.2
 pytest>=8.4.1
 pytest-asyncio>=1.1.0
 
-resend==2.4.0

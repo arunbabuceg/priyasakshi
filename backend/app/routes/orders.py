@@ -20,7 +20,12 @@ logger = logging.getLogger("priya_sakshi.orders")
 @router.post("", response_model=OrderResponse)
 async def create_order(payload: OrderCreate):
     try:
+        # DEBUG LOGS
+        logger.info("PHONE RECEIVED = %s", payload.phone)
+        logger.info("FULL PAYLOAD = %s", payload.model_dump())
+
         order = await order_service.record_order(payload)
+
     except Exception as exc:
         logger.exception("Order recording failed")
         raise HTTPException(status_code=500, detail="Could not record order") from exc

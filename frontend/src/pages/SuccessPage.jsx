@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle2, ArrowLeft } from 'lucide-react';
+import { CircleCheck as CheckCircle2, ArrowLeft } from 'lucide-react';
 import { ClayShapes, KolamStar } from '@/components/ClayShapes';
 
 /**
@@ -42,7 +42,7 @@ export default function SuccessPage() {
           Order confirmed.
         </h1>
         <p className="mt-4 text-[#2E2825]/75 leading-relaxed">
-          Your payment was successful and your order is on its way to being packed. We've
+          Your payment was successful and your order is on its way to being packed. We&apos;ve
           emailed you a confirmation with the details.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">

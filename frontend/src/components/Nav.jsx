@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User, LogOut } from 'lucide-react';
+import { ShoppingBag, Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
@@ -123,6 +123,13 @@ export default function Nav() {
                         <div className="px-3 py-1 text-[11px] text-[#8A9A5B]">Verify your email</div>
                       )}
                       <button
+                        onClick={() => { setMenuOpen(false); navigate('/account'); }}
+                        className="w-full text-left px-3 py-2 rounded-2xl text-sm text-[#2E2825] hover:bg-[#F3EBDC] flex items-center gap-2"
+                        data-testid="nav-dashboard-btn"
+                      >
+                        <LayoutDashboard className="w-4 h-4" /> My Account
+                      </button>
+                      <button
                         onClick={handleLogout}
                         className="w-full text-left px-3 py-2 rounded-2xl text-sm text-[#2E2825] hover:bg-[#F3EBDC] flex items-center gap-2"
                         data-testid="nav-logout-btn"
@@ -199,13 +206,22 @@ export default function Nav() {
               ))}
               <div className="border-t border-[#EFE6D6] mt-2 pt-2">
                 {user ? (
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F3EBDC] flex items-center gap-2"
-                    data-testid="mobile-logout-btn"
-                  >
-                    <LogOut className="w-4 h-4" /> Sign out ({user.name})
-                  </button>
+                  <>
+                    <button
+                      onClick={() => { setMobileOpen(false); navigate('/account'); }}
+                      className="w-full text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F3EBDC] flex items-center gap-2"
+                      data-testid="mobile-dashboard-btn"
+                    >
+                      <LayoutDashboard className="w-4 h-4" /> My Account
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-3 rounded-2xl text-[#2E2825] font-medium hover:bg-[#F3EBDC] flex items-center gap-2"
+                      data-testid="mobile-logout-btn"
+                    >
+                      <LogOut className="w-4 h-4" /> Sign out ({user.name})
+                    </button>
+                  </>
                 ) : (
                   <button
                     onClick={() => { setMobileOpen(false); navigate('/login'); }}

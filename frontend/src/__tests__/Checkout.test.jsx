@@ -4,11 +4,33 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CartProvider, useCart } from '@/context/CartContext';
+import { AuthProvider } from '@/context/AuthContext';
 import CheckoutForm from '@/components/CheckoutForm';
 
 // Mock the order service so tests don't try to hit the backend.
 vi.mock('@/services/orderService', () => ({
   createOrder: vi.fn().mockResolvedValue({ ok: true, data: { order_id: 'test-order-id' } }),
+}));
+
+// Mock profile + address services so CheckoutForm's prefill effect doesn't hit the network.
+vi.mock('@/services/profileService', () => ({
+  getProfile: vi.fn().mockResolvedValue({ ok: true, data: { name: 'Ananya', email: 'ananya@example.com', phone: '9876543210' } }),
+  updateProfile: vi.fn(),
+  changePassword: vi.fn(),
+}));
+vi.mock('@/services/addressService', () => ({
+  getAddresses: vi.fn().mockResolvedValue({ ok: true, data: [] }),
+  createAddress: vi.fn(),
+  updateAddress: vi.fn(),
+  deleteAddress: vi.fn(),
+}));
+
+// Mock authService so AuthProvider's getMe() on mount doesn't hit the network.
+vi.mock('@/services/authService', () => ({
+  getMe: vi.fn().mockResolvedValue({ ok: true, data: { id: 'u1', name: 'Ananya', email: 'ananya@example.com' } }),
+  login: vi.fn(),
+  register: vi.fn(),
+  logout: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
 // Mock the Razorpay payment service end-to-end so tests never load the real
@@ -58,11 +80,13 @@ function Seed({ children }) {
 function renderCheckout() {
   return render(
     <MemoryRouter>
-      <CartProvider>
-        <Seed>
-          <CheckoutForm onBack={() => {}} />
-        </Seed>
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Seed>
+            <CheckoutForm onBack={() => {}} />
+          </Seed>
+        </CartProvider>
+      </AuthProvider>
     </MemoryRouter>,
   );
 }
@@ -76,6 +100,12 @@ async function fillAndSubmit() {
   const user = userEvent.setup();
   renderCheckout();
 
+  // Wait for the auth prefill effect to populate name/email, then clear and
+  // type our test values so we don't end up with concatenated strings.
+  await waitFor(() => screen.getByTestId('checkout-name'));
+
+  await user.clear(screen.getByTestId('checkout-name'));
+  await user.clear(screen.getByTestId('checkout-email'));
   await user.type(screen.getByTestId('checkout-name'), 'Ananya');
   await user.type(screen.getByTestId('checkout-email'), 'ananya@example.com');
   await user.type(screen.getByTestId('checkout-address'), '12 Weavers St');

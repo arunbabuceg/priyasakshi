@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { ArrowLeft, Lock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { formatINR } from '@/lib/format';
 import { createOrder } from '@/services/orderService';
+import { getAddresses } from '@/services/addressService';
+import { getProfile } from '@/services/profileService';
 import {
   createRazorpayOrder,
   loadRazorpayCheckout,
@@ -27,9 +30,45 @@ const initialForm = {
 
 export default function CheckoutForm({ onBack }) {
   const { items, subtotal, shipping, total, clear, setIsOpen } = useCart();
+  const { user } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
+  const [addresses, setAddresses] = useState([]);
   const navigate = useNavigate();
+
+  // Prefill name/email from the logged-in user, and load saved addresses.
+  // Runs once after the user is known; never overwrites values the shopper
+  // has already typed.
+  const prefilledRef = React.useRef(false);
+  useEffect(() => {
+    if (!user || prefilledRef.current) return;
+    prefilledRef.current = true;
+    setForm((f) => ({
+      ...f,
+      customer_name: f.customer_name || user.name || '',
+      customer_email: f.customer_email || user.email || '',
+    }));
+    getProfile().then((res) => {
+      if (res.ok && res.data?.phone) {
+        setForm((f) => ({ ...f, phone: f.phone || res.data.phone }));
+      }
+    });
+    getAddresses().then((res) => setAddresses(res.data || []));
+  }, [user]);
+
+  const applyAddress = (id) => {
+    const addr = addresses.find((a) => a.id === id);
+    if (!addr) return;
+    setForm((f) => ({
+      ...f,
+      shipping_address: addr.line1,
+      shipping_city: addr.city,
+      shipping_state: addr.state,
+      shipping_postal_code: addr.postal_code,
+      shipping_country: addr.country,
+      phone: f.phone || addr.phone || '',
+    }));
+  };
 
   const handleChange = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -182,6 +221,27 @@ export default function CheckoutForm({ onBack }) {
           </div>
 
           <SectionTitle>Shipping</SectionTitle>
+          {addresses.length > 0 && (
+            <label className="block">
+              <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Saved addresses</span>
+              <div className="relative mt-1.5">
+                <MapPin className="w-4 h-4 text-[#2E2825]/40 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+                <select
+                  className="clay-input !pl-11 appearance-none"
+                  onChange={(e) => e.target.value && applyAddress(e.target.value)}
+                  defaultValue=""
+                  data-testid="checkout-saved-address"
+                >
+                  <option value="">Enter a new address</option>
+                  {addresses.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.label} — {a.line1}, {a.city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </label>
+          )}
           <Field
             label="Address"
             value={form.shipping_address}

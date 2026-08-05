@@ -86,6 +86,27 @@ class AuthService:
     async def get_user_by_id(self, user_id: str) -> Optional[dict]:
         return await get_db().users.find_one({"id": user_id})
 
+    async def update_profile(self, user_id: str, name: Optional[str] = None, phone: Optional[str] = None) -> Optional[dict]:
+        update_fields: dict = {}
+        if name is not None:
+            update_fields["name"] = name
+        if phone is not None:
+            update_fields["phone"] = phone
+        if not update_fields:
+            return await self.get_user_by_id(user_id)
+        await get_db().users.update_one({"id": user_id}, {"$set": update_fields})
+        return await self.get_user_by_id(user_id)
+
+    async def change_password(self, user_id: str, current_password: str, new_password: str) -> bool:
+        user = await self.get_user_by_id(user_id)
+        if not user or not security.verify_password(current_password, user["password_hash"]):
+            raise ValueError("Current password is incorrect")
+        await get_db().users.update_one(
+            {"id": user_id},
+            {"$set": {"password_hash": security.hash_password(new_password)}},
+        )
+        return True
+
     async def verify_email(self, token: str) -> bool:
         payload = security.decode_token(token)
         if not payload or payload.get("type") != "verify_email":

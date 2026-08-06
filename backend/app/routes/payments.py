@@ -20,6 +20,7 @@ from ..models.payment import (
     VerifyPaymentResponse,
 )
 from ..services.email_service import email_service
+from ..services.invoice_service import invoice_service
 from ..services.order_service import order_service
 from ..services.payment_service import payment_service
 
@@ -93,20 +94,49 @@ async def verify_payment(payload: VerifyPaymentRequest):
         razorpay_payment_id=payload.razorpay_payment_id,
     )
 
-    # Send emails only after successful payment verification
-    await email_service.send_owner_order_notification(order)
-    await email_service.send_order_confirmation(order)
+    logger.info("Payment verified")
 
-    # Send invoice email with PDF attachment
+    # Step 1: Send owner order notification
+    try:
+        await email_service.send_owner_order_notification(order)
+        logger.info("Owner email sent")
+    except Exception:
+        logger.exception(
+            "Failed to send owner order notification for order_id=%s",
+            payload.order_id,
+        )
+
+    # Step 2: Send order confirmation
+    try:
+        await email_service.send_order_confirmation(order)
+        logger.info("Customer email sent")
+    except Exception:
+        logger.exception(
+            "Failed to send order confirmation for order_id=%s",
+            payload.order_id,
+        )
+
+    # Step 3 & 4: Get invoice path and send invoice email
     if order.get("invoice_number") and order.get("invoice_file_path"):
-        from .invoice_service import invoice_service
-        invoice_path = invoice_service.get_invoice_path(order)
-        if invoice_path:
-            _, full_path = invoice_path
-            await email_service.send_invoice_email(order, full_path, order["invoice_number"])
+        invoice_path = None
+        try:
+            invoice_path = invoice_service.get_invoice_path(order)
+            logger.info("Invoice path resolved")
+        except Exception:
+            logger.exception(
+                "Failed to get invoice path for order_id=%s",
+                payload.order_id,
+            )
 
-    return VerifyPaymentResponse(
-        success=True,
-        order_id=payload.order_id,
-        message="Payment verified successfully",
-    )
+        if invoice_path:
+            try:
+                _, full_path = invoice_path
+                await email_service.send_invoice_email(order, full_path, order["invoice_number"])
+                logger.info("Invoice email sent")
+            except Exception:
+                logger.exception(
+                    "Failed to send invoice email for order_id=%s",
+                    payload.order_id,
+                )
+
+    return VerifyPaymentResponse(success=True)

@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Package, Users, Mail, ArrowLeft, ShoppingBag, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, Users, Mail, ArrowLeft, ShoppingBag, Menu, X, Box } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { site } from '@/data/site';
 
 const NAV = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/admin/products', label: 'Products', icon: Box },
   { to: '/admin/orders', label: 'Orders', icon: Package },
   { to: '/admin/customers', label: 'Customers', icon: Users },
   { to: '/admin/messages', label: 'Messages', icon: Mail },

@@ -128,6 +128,7 @@ class OrderService:
 
         Payment status becomes 'paid'. Shipment status automatically becomes
         'Order Received', unless an admin has already moved it further along.
+        Generates invoice for the paid order.
         """
         now = _now()
         current = serialize_doc(await get_db().orders.find_one({"id": order_id})) or {}
@@ -149,6 +150,17 @@ class OrderService:
         if current_shipment == "waiting_for_payment":
             set_fields["shipment_status"] = "order_received"
             set_fields["status"] = "order_received"
+
+        # Generate invoice for the paid order
+        try:
+            from .invoice_service import invoice_service
+            invoice_number, invoice_file_path = invoice_service.generate_invoice(current)
+            set_fields["invoice_number"] = invoice_number
+            set_fields["invoice_file_path"] = invoice_file_path
+            set_fields["invoice_generated_at"] = now
+            logger.info("Invoice %s generated for order %s", invoice_number, order_id)
+        except Exception as exc:
+            logger.exception("Failed to generate invoice for order %s: %s", order_id, exc)
 
         updated = await get_db().orders.find_one_and_update(
             {"id": order_id},

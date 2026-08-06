@@ -32,7 +32,7 @@ class EmailService:
         else:
             logger.info("Email service disabled (RESEND_API_KEY missing)")
 
-    async def _send(self, to: str | list[str], subject: str, html: str) -> None:
+    async def _send(self, to: str | list[str], subject: str, html: str, attachments: list | None = None) -> None:
         if not self._enabled:
             logger.info("[email disabled] to=%s subject=%s", to, subject)
             return
@@ -46,6 +46,9 @@ class EmailService:
                 "subject": subject,
                 "html": html,
             }
+
+            if attachments:
+                params["attachments"] = attachments
 
             response = resend.Emails.send(params)
 
@@ -111,6 +114,65 @@ class EmailService:
             order["customer_email"],
             f"Order received — {settings.brand_name}",
             html,
+        )
+
+    async def send_invoice_email(self, order: dict, invoice_path: str, invoice_number: str) -> None:
+        """Send order confirmation email with invoice PDF attachment."""
+        from datetime import datetime, timezone
+
+        customer_name = order.get("customer_name", "Customer")
+        order_id = str(order.get("id", ""))[:8]
+        total = order.get("total", 0)
+
+        # Format total in INR
+        try:
+            total_formatted = f"₹{total:,.2f}"
+        except (TypeError, ValueError):
+            total_formatted = f"₹{total}"
+
+        when = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+        html = (
+            f"<div style='font-family:Outfit,Arial,sans-serif;max-width:560px;margin:auto'>"
+            f"<h2 style='color:#8B2956;margin-top:0'>Thank you for your order!</h2>"
+            f"<p>Dear {customer_name},</p>"
+            f"<p>Thank you for shopping with <strong>{settings.brand_name}</strong>. "
+            f"Your payment has been successfully processed.</p>"
+            f"<p>We're preparing your order with care and it will be shipped soon. "
+            f"You'll receive a shipping notification once it's on its way.</p>"
+            f"<div style='background:#F5E6ED;padding:16px;border-radius:12px;margin:20px 0'>"
+            f"<h3 style='color:#8B2956;margin-top:0'>Order Details</h3>"
+            f"<p style='margin:4px 0'><strong>Order Number:</strong> {order_id}</p>"
+            f"<p style='margin:4px 0'><strong>Invoice Number:</strong> {invoice_number}</p>"
+            f"<p style='margin:4px 0'><strong>Order Date:</strong> {when}</p>"
+            f"<p style='margin:4px 0'><strong>Total Amount:</strong> {total_formatted}</p>"
+            f"</div>"
+            f"<p>Please find your invoice attached to this email for your records.</p>"
+            f"<p style='margin-top:24px'>If you have any questions, please don't hesitate to contact us at "
+            f"<a href='mailto:{settings.contact_to_email}'>{settings.contact_to_email}</a>.</p>"
+            f"<p style='margin-top:24px'>Warm regards,<br><strong>{settings.brand_name} Team</strong></p>"
+            f"</div>"
+        )
+
+        # Prepare attachment
+        attachments = []
+        try:
+            import base64
+            with open(invoice_path, "rb") as f:
+                pdf_data = base64.b64encode(f.read()).decode("utf-8")
+            attachments.append({
+                "filename": f"{invoice_number}.pdf",
+                "data": pdf_data,
+                "type": "application/pdf",
+            })
+        except Exception as exc:
+            logger.warning("Could not attach invoice PDF: %s", exc)
+
+        await self._send(
+            order["customer_email"],
+            f"Your Priya Sakshi Order Confirmation & Invoice",
+            html,
+            attachments if attachments else None,
         )
 
     async def send_email_verification(self, to_email: str, token: str) -> None:

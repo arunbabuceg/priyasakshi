@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, Route, CreditCard, Loader as Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Route, CreditCard, Loader as Loader2, FileText } from 'lucide-react';
 import { getOrder } from '@/services/orderHistoryService';
+import { downloadInvoice } from '@/services/invoiceService';
 import { formatINR } from '@/lib/format';
 import { ClayShapes } from '@/components/ClayShapes';
 import OrderItemsList from '@/components/OrderItemsList';
@@ -112,6 +113,19 @@ export default function OrderDetailsPage() {
                   <span className="font-medium text-sm" style={{ color: ship.color }}>{ship.label}</span>
                 </div>
               </div>
+              {/* Download Invoice Button - only for paid orders */}
+              {order.payment_status === 'paid' && order.invoice_number && (
+                <div className="mt-5">
+                  <button
+                    onClick={() => downloadInvoice(order.id)}
+                    className="clay-btn-primary h-12 px-6 flex items-center gap-2"
+                    data-testid="order-download-invoice"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Download Invoice ({order.invoice_number})
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Products */}

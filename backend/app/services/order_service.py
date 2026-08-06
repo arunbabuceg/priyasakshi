@@ -15,6 +15,7 @@ from pymongo import ReturnDocument
 
 from ..db import get_db, serialize_doc, serialize_docs
 from ..models.order import OrderCreate
+from .status import normalize_order, normalize_orders, normalize_order_status
 
 logger = logging.getLogger("priya_sakshi.orders")
 
@@ -30,14 +31,14 @@ class OrderService:
             "id": str(uuid.uuid4()),
             "user_id": user_id,
             "created_at": now,
-            "status": "received",
-            "payment_status": "unpaid",
+            "status": "order_received",
+            "payment_status": "awaiting_payment",
             "tracking_number": None,
             "courier": None,
             "estimated_delivery": None,
             "timeline": [
                 {
-                    "status": "received",
+                    "status": "order_received",
                     "label": "Order Received",
                     "at": now,
                     "note": "Your order has been placed.",
@@ -67,17 +68,17 @@ class OrderService:
             order["total"],
         )
 
-        return serialize_doc(order)
+        return normalize_order(serialize_doc(order))
 
     async def get_order(self, order_id: str) -> dict | None:
-        return serialize_doc(await get_db().orders.find_one({"id": order_id}))
+        return normalize_order(serialize_doc(await get_db().orders.find_one({"id": order_id})))
 
     async def list_orders_for_user(self, user_id: str, email: str | None = None) -> list[dict]:
         query: dict = {"user_id": user_id}
         if email:
             query = {"$or": [{"user_id": user_id}, {"customer_email": email.lower()}]}
         cursor = get_db().orders.find(query).sort("created_at", -1)
-        return serialize_docs(await cursor.to_list(length=None))
+        return normalize_orders(serialize_docs(await cursor.to_list(length=None)))
 
     async def mark_payment_initiated(
         self,
@@ -90,8 +91,7 @@ class OrderService:
             {"id": order_id},
             {
                 "$set": {
-                    "status": "pending_payment",
-                    "payment_status": "pending",
+                    "payment_status": "awaiting_payment",
                     "payment": {
                         "provider": "razorpay",
                         "razorpay_order_id": razorpay_order_id,
@@ -100,7 +100,7 @@ class OrderService:
                 },
                 "$push": {
                     "timeline": {
-                        "status": "pending_payment",
+                        "status": "awaiting_payment",
                         "label": "Payment Pending",
                         "at": now,
                         "note": "Awaiting payment confirmation.",
@@ -116,22 +116,34 @@ class OrderService:
         razorpay_order_id: str,
         razorpay_payment_id: str,
     ) -> dict | None:
-        """Called once the Razorpay signature has been verified."""
+        """Called once the Razorpay signature has been verified.
+
+        Payment status becomes 'paid'. The order lifecycle is kept separate:
+        if the order is still at receipt stage we advance it to 'preparing',
+        but we never overwrite a later lifecycle stage an admin may have set.
+        """
         now = _now()
+        current = serialize_doc(await get_db().orders.find_one({"id": order_id}))
+        set_fields: dict = {
+            "payment_status": "paid",
+            "payment": {
+                "provider": "razorpay",
+                "razorpay_order_id": razorpay_order_id,
+                "razorpay_payment_id": razorpay_payment_id,
+                "status": "verified",
+                "verified_at": now,
+            },
+        }
+        # Advance lifecycle only from the receipt stage. Legacy 'received' /
+        # 'pending_payment' / 'paid' values also count as receipt-stage.
+        receipt_stages = {"order_received", "received", "pending_payment", "paid", None}
+        if normalize_order_status(current.get("status")) == "order_received" or current.get("status") in receipt_stages:
+            set_fields["status"] = "preparing"
+
         updated = await get_db().orders.find_one_and_update(
             {"id": order_id},
             {
-                "$set": {
-                    "status": "paid",
-                    "payment_status": "paid",
-                    "payment": {
-                        "provider": "razorpay",
-                        "razorpay_order_id": razorpay_order_id,
-                        "razorpay_payment_id": razorpay_payment_id,
-                        "status": "verified",
-                        "verified_at": now,
-                    },
-                },
+                "$set": set_fields,
                 "$push": {
                     "timeline": {
                         "status": "paid",
@@ -143,7 +155,7 @@ class OrderService:
             },
             return_document=ReturnDocument.AFTER,
         )
-        return serialize_doc(updated)
+        return normalize_order(serialize_doc(updated))
 
 
 order_service = OrderService()

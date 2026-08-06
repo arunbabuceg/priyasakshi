@@ -15,13 +15,14 @@ from pymongo import ReturnDocument
 from ..db import get_db, serialize_doc, serialize_docs
 from ..models.admin import AdminOrderUpdate
 from .email_service import email_service
+from .status import normalize_order, normalize_orders, ORDER_STATUSES
 
 logger = logging.getLogger("priya_sakshi.admin")
 
 # Statuses that trigger a customer-facing email when an admin transitions to
-# them. Maps order status -> (email subject suffix, timeline label, note).
+# them. Maps canonical order status -> (email subject suffix, timeline label, note).
 STATUS_TRANSITIONS = {
-    "confirmed": ("Order confirmed", "Order Confirmed", "Your order is confirmed."),
+    "preparing": ("Order confirmed", "Order Confirmed", "Your order is confirmed and being prepared."),
     "packed": ("Order packed", "Packed", "Your order has been packed."),
     "shipped": ("Order shipped", "Shipped", "Your order is on its way."),
     "out_for_delivery": ("Out for delivery", "Out for Delivery", "Your order is out for delivery."),
@@ -42,7 +43,8 @@ class AdminService:
         orders = db.orders
 
         total_orders = await orders.count_documents({})
-        pending = await orders.count_documents({"status": {"$in": ["received", "pending_payment", "confirmed"]}})
+        # Count by normalized order status; legacy values map into these buckets.
+        pending = await orders.count_documents({"status": {"$in": ["received", "pending_payment", "confirmed", "paid", "order_received", "preparing"]}})
         processing = await orders.count_documents({"status": {"$in": ["processing", "packed"]}})
         shipped = await orders.count_documents({"status": {"$in": ["shipped", "out_for_delivery"]}})
         delivered = await orders.count_documents({"status": "delivered"})
@@ -96,15 +98,18 @@ class AdminService:
                     {"id": {"$regex": s, "$options": "i"}},
                 ]
         cursor = get_db().orders.find(query).sort("created_at", -1).skip(skip).limit(limit)
-        return serialize_docs(await cursor.to_list(length=limit))
+        return normalize_orders(serialize_docs(await cursor.to_list(length=limit)))
 
     async def get_order(self, order_id: str) -> dict | None:
-        return serialize_doc(await get_db().orders.find_one({"id": order_id}))
+        return normalize_order(serialize_doc(await get_db().orders.find_one({"id": order_id})))
 
     async def update_order(self, order_id: str, payload: AdminOrderUpdate) -> dict | None:
         update_fields: dict = {}
         if payload.status is not None:
-            update_fields["status"] = payload.status
+            # Only accept canonical order statuses; ignore anything else so a
+            # stale client cannot corrupt the lifecycle.
+            if payload.status in ORDER_STATUSES:
+                update_fields["status"] = payload.status
         if payload.courier is not None:
             update_fields["courier"] = payload.courier
         if payload.tracking_number is not None:
@@ -141,10 +146,10 @@ class AdminService:
         if updated and timeline_entry:
             # Fire-and-forget customer notification email.
             try:
-                await email_service.send_order_status_update(serialize_doc(updated))
+                await email_service.send_order_status_update(normalize_order(serialize_doc(updated)))
             except Exception:
                 logger.exception("Failed to send status update email for order %s", order_id)
-        return serialize_doc(updated)
+        return normalize_order(serialize_doc(updated))
 
     # ---------- Customers ----------
     async def list_customers(self, search: Optional[str] = None) -> dict:

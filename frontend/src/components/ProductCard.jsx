@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,8 +13,9 @@ const PALETTES = [
   { bg: '#F5EBF0', accent: '#D9B5C0' },
 ];
 
-export default function ProductCard({ product, index = 0, onOpen }) {
+export default function ProductCard({ product, index = 0 }) {
   const { add } = useCart();
+  const navigate = useNavigate();
   const pal = PALETTES[index % PALETTES.length];
   const primaryImage = product.images?.[0];
 
@@ -23,6 +25,8 @@ export default function ProductCard({ product, index = 0, onOpen }) {
     toast.success(`${product.name} added to your basket`);
   };
 
+  const goToProduct = () => navigate(`/products/${product.slug || product.id}`);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -30,7 +34,7 @@ export default function ProductCard({ product, index = 0, onOpen }) {
       viewport={{ once: true, margin: '-50px' }}
       transition={{ duration: 0.5, delay: (index % 6) * 0.06 }}
       whileHover={{ y: -6 }}
-      onClick={() => onOpen?.(product)}
+      onClick={goToProduct}
       className="clay-card p-5 cursor-pointer group relative overflow-hidden"
       data-testid={`product-card-${product.id}`}
     >

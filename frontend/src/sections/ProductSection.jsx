@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
-import ProductDialog from '@/components/ProductDialog';
 import { getProducts } from '@/services/productService';
 
 export default function ProductSection({
@@ -15,8 +14,6 @@ export default function ProductSection({
 }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
-  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -29,11 +26,6 @@ export default function ProductSection({
       mounted = false;
     };
   }, [category]);
-
-  const handleOpen = (p) => {
-    setSelected(p);
-    setOpen(true);
-  };
 
   return (
     <section id={id} className="relative py-16 md:py-32" data-testid={`section-${id}`}>
@@ -73,13 +65,11 @@ export default function ProductSection({
         ) : (
           <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid={`${id}-grid`}>
             {products.map((p, i) => (
-              <ProductCard key={p.id} product={p} index={i} onOpen={handleOpen} />
+              <ProductCard key={p.id} product={p} index={i} />
             ))}
           </div>
         )}
       </div>
-
-      <ProductDialog product={selected} open={open} onOpenChange={setOpen} />
     </section>
   );
 }

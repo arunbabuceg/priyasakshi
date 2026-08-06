@@ -49,6 +49,10 @@ async def lifespan(_: FastAPI):
     try:
         await get_db().command("ping")
         logger.info("Connected to MongoDB (db=%s)", settings.db_name)
+        
+        # Auto-migrate: seed products if collection is empty
+        from .services.product_service import _auto_seed_products
+        await _auto_seed_products()
     except Exception as exc:  # pragma: no cover - infra failure path
         logger.warning("MongoDB ping failed at startup: %s", exc)
 
@@ -72,12 +76,10 @@ def create_app() -> FastAPI:
     )
 
     # ---- CORS ----
+    # Allow all origins for development/staging; restrict to specific domains in production
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "https://www.priyasakshi.com",
-            "https://priyasakshi.com",
-        ],
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

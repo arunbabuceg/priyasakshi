@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { ArrowLeft, MapPin, Package, Truck, CreditCard, Save, Loader as Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Package, Truck, CreditCard, Save, ExternalLink, Loader as Loader2 } from 'lucide-react';
 import { getAdminOrder, updateAdminOrder } from '@/services/adminService';
 import { formatINR } from '@/lib/format';
+import OrderItemsList from '@/components/OrderItemsList';
 import { getPaymentBadge, getShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
+import { COURIERS, getCourier, getCourierName, getTrackingLink } from '@/lib/couriers';
 
 const formatDate = (iso) => {
   try {
@@ -71,10 +73,11 @@ export default function AdminOrderDetailsPage() {
     setSaving(true);
     const payload = {
       shipment_status: form.shipment_status || undefined,
-      courier: form.courier || undefined,
-      tracking_number: form.tracking_number || undefined,
-      estimated_delivery: form.estimated_delivery ? new Date(form.estimated_delivery).toISOString() : undefined,
-      internal_notes: form.internal_notes || undefined,
+      // Sent as empty strings (not undefined) so a field can also be cleared.
+      courier: form.courier,
+      tracking_number: form.tracking_number,
+      estimated_delivery: form.estimated_delivery ? new Date(form.estimated_delivery).toISOString() : '',
+      internal_notes: form.internal_notes,
     };
     const res = await updateAdminOrder(orderId, payload);
     setSaving(false);
@@ -104,6 +107,11 @@ export default function AdminOrderDetailsPage() {
   const pay = getPaymentBadge(order.payment_status);
   const ship = getShipmentBadge(readShipmentStatus(order));
   const isPaid = order.payment_status === 'paid';
+  // Legacy free-text couriers stay selectable until the admin picks a catalog entry.
+  const knownCourier = getCourier(form.courier);
+  const isUnknownCourier = Boolean(form.courier) && !knownCourier;
+  const courierValue = knownCourier ? knownCourier.code : form.courier;
+  const trackingLink = getTrackingLink(form.courier, form.tracking_number);
 
   return (
     <div>
@@ -135,17 +143,7 @@ export default function AdminOrderDetailsPage() {
           {/* Products */}
           <div className="clay-card p-6 sm:p-8">
             <h2 className="font-serif-display text-2xl text-[#2E2825] mb-4 flex items-center gap-2"><Package className="w-5 h-5" /> Products</h2>
-            <ul className="space-y-3">
-              {order.items?.map((it, i) => (
-                <li key={i} className="flex items-center justify-between gap-4 pb-3 border-b border-[#EADFE5] last:border-0">
-                  <div className="min-w-0">
-                    <div className="font-medium text-[#2E2825] truncate">{it.name || it.product_id}</div>
-                    <div className="text-xs text-[#2E2825]/60">Qty: {it.quantity}</div>
-                  </div>
-                  <div className="font-serif-display text-lg text-[#8B2956] flex-shrink-0">{formatINR((it.price || 0) * it.quantity)}</div>
-                </li>
-              ))}
-            </ul>
+            <OrderItemsList items={order.items} testId="admin-order-products" />
             <div className="mt-4 space-y-1 text-sm">
               <div className="flex justify-between"><span className="text-[#2E2825]/70">Subtotal</span><span>{formatINR(order.subtotal)}</span></div>
               <div className="flex justify-between"><span className="text-[#2E2825]/70">Shipping</span><span>{order.shipping_fee === 0 ? 'FREE' : formatINR(order.shipping_fee)}</span></div>
@@ -192,7 +190,13 @@ export default function AdminOrderDetailsPage() {
               </label>
               <label className="block">
                 <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Courier</span>
-                <input className="clay-input mt-1.5" value={form.courier} onChange={(e) => setForm((f) => ({ ...f, courier: e.target.value }))} placeholder="e.g. BlueDart" data-testid="admin-order-courier-input" />
+                <select className="clay-input mt-1.5" value={courierValue} onChange={(e) => setForm((f) => ({ ...f, courier: e.target.value }))} data-testid="admin-order-courier-input">
+                  <option value="">Not assigned</option>
+                  {COURIERS.map((c) => (
+                    <option key={c.code} value={c.code}>{c.name}</option>
+                  ))}
+                  {isUnknownCourier && <option value={form.courier}>{form.courier}</option>}
+                </select>
               </label>
               <label className="block">
                 <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Tracking Number</span>
@@ -207,6 +211,24 @@ export default function AdminOrderDetailsPage() {
               <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Internal Notes</span>
               <textarea className="clay-input mt-1.5 min-h-[100px] resize-none" value={form.internal_notes} onChange={(e) => setForm((f) => ({ ...f, internal_notes: e.target.value }))} placeholder="Notes visible only to admins" data-testid="admin-order-notes-input" />
             </label>
+            {trackingLink && (
+              <div className="flex flex-wrap items-center gap-3 text-xs text-[#2E2825]/60">
+                <a
+                  href={trackingLink.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="clay-btn-ghost h-10 px-4 inline-flex items-center gap-2 text-sm"
+                  data-testid="admin-order-track-link"
+                >
+                  Track Package <ExternalLink className="w-4 h-4" />
+                </a>
+                <span>
+                  {trackingLink.prefilled
+                    ? `Opens ${getCourierName(form.courier)} with the tracking number pre-filled.`
+                    : `${getCourierName(form.courier)} does not support pre-filled links — the number is shown beside the button for the customer.`}
+                </span>
+              </div>
+            )}
             <button type="submit" disabled={saving} className="clay-btn-primary h-14 px-8 flex items-center gap-2 disabled:opacity-70" data-testid="admin-order-save-btn">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {saving ? 'Saving…' : 'Save Changes'}

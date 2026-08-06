@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, Truck, CreditCard, Loader as Loader2, Package } from 'lucide-react';
+import { ArrowLeft, MapPin, Route, CreditCard, Loader as Loader2 } from 'lucide-react';
 import { getOrder } from '@/services/orderHistoryService';
 import { formatINR } from '@/lib/format';
 import { ClayShapes } from '@/components/ClayShapes';
-import { getPaymentBadge, getShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
+import OrderItemsList from '@/components/OrderItemsList';
+import ShipmentTimeline from '@/components/ShipmentTimeline';
+import TrackingCard from '@/components/TrackingCard';
+import { getPaymentBadge, getCustomerShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
 
 const formatDate = (iso) => {
   try {
@@ -46,9 +49,7 @@ export default function OrderDetailsPage() {
   const shipping = order?.shipping || {};
   const timeline = order?.timeline || [];
   const pay = getPaymentBadge(order?.payment_status);
-  const ship = getShipmentBadge(readShipmentStatus(order));
-  const trackingLabels = ['Shipped', 'Out for Delivery', 'Delivered'];
-  const showTracking = trackingLabels.includes(ship.label);
+  const ship = getCustomerShipmentBadge(readShipmentStatus(order));
 
   return (
     <div className="min-h-screen bg-[#FAF5F8] relative overflow-hidden px-4 py-28 md:py-32">
@@ -116,27 +117,7 @@ export default function OrderDetailsPage() {
             {/* Products */}
             <div className="clay-card p-6 sm:p-8" data-testid="order-detail-products">
               <h2 className="font-serif-display text-2xl text-[#2E2825] mb-4">Products</h2>
-              <ul className="space-y-3">
-                {order.items?.map((it, i) => (
-                  <li key={i} className="flex items-center justify-between gap-4 pb-3 border-b border-[#EADFE5] last:border-0">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: '#F5EBF0', boxShadow: 'inset 0 -3px 6px rgba(138,115,130,0.15), inset 0 3px 6px rgba(255,255,255,0.9)' }}
-                      >
-                        <Package className="w-5 h-5 text-[#8B2956]" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="font-medium text-[#2E2825] truncate">{it.name || it.product_id}</div>
-                        <div className="text-xs text-[#2E2825]/60">Qty: {it.quantity}</div>
-                      </div>
-                    </div>
-                    <div className="font-serif-display text-lg text-[#8B2956] flex-shrink-0">
-                      {formatINR((it.price || 0) * it.quantity)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <OrderItemsList items={order.items} />
               <div className="mt-4 space-y-1 text-sm">
                 <div className="flex justify-between"><span className="text-[#2E2825]/70">Subtotal</span><span>{formatINR(order.subtotal)}</span></div>
                 <div className="flex justify-between"><span className="text-[#2E2825]/70">Shipping</span><span>{order.shipping_fee === 0 ? 'FREE' : formatINR(order.shipping_fee)}</span></div>
@@ -161,34 +142,16 @@ export default function OrderDetailsPage() {
               </div>
             </div>
 
+            {/* Shipment progress */}
+            <div className="clay-card p-6 sm:p-8" data-testid="order-detail-progress">
+              <h2 className="font-serif-display text-2xl text-[#2E2825] mb-4 flex items-center gap-2">
+                <Route className="w-5 h-5" /> Shipment Status
+              </h2>
+              <ShipmentTimeline order={order} />
+            </div>
+
             {/* Tracking */}
-            {showTracking && (order.tracking_number || order.courier || order.estimated_delivery) && (
-              <div className="clay-card p-6 sm:p-8" data-testid="order-detail-tracking">
-                <h2 className="font-serif-display text-2xl text-[#2E2825] mb-4 flex items-center gap-2">
-                  <Truck className="w-5 h-5" /> Tracking
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                  {order.courier && (
-                    <div>
-                      <div className="text-xs uppercase tracking-widest text-[#2E2825]/50">Courier</div>
-                      <div className="font-medium text-[#2E2825] mt-1">{order.courier}</div>
-                    </div>
-                  )}
-                  {order.tracking_number && (
-                    <div>
-                      <div className="text-xs uppercase tracking-widest text-[#2E2825]/50">Tracking Number</div>
-                      <div className="font-medium text-[#2E2825] mt-1">{order.tracking_number}</div>
-                    </div>
-                  )}
-                  {order.estimated_delivery && (
-                    <div>
-                      <div className="text-xs uppercase tracking-widest text-[#2E2825]/50">Estimated Delivery</div>
-                      <div className="font-medium text-[#2E2825] mt-1">{formatDate(order.estimated_delivery)}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            <TrackingCard order={order} />
 
             {/* Timeline */}
             <div className="clay-card p-6 sm:p-8" data-testid="order-detail-timeline">

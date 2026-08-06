@@ -25,6 +25,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from .couriers import courier_name, tracking_url
+
 # ---- Canonical vocabularies ----
 PAYMENT_STATUSES = ("awaiting_payment", "paid", "failed", "refunded", "cancelled")
 
@@ -61,6 +63,15 @@ SHIPMENT_LABELS = {
     "delivered": "Delivered",
     "cancelled": "Cancelled",
     "returned": "Returned",
+}
+
+# Customer-facing labels. Customers never see the internal "Order Received"
+# stage — pre-fulfillment shows as "Order Placed" instead. The stored values
+# are unchanged.
+CUSTOMER_SHIPMENT_LABELS = {
+    **SHIPMENT_LABELS,
+    "waiting_for_payment": "Order Placed",
+    "order_received": "Order Placed",
 }
 
 PAYMENT_LABELS = {
@@ -129,6 +140,10 @@ def shipment_status_label(value: Any) -> str:
     return SHIPMENT_LABELS.get(normalize_shipment_status(value), "Waiting for Payment")
 
 
+def customer_shipment_status_label(value: Any) -> str:
+    return CUSTOMER_SHIPMENT_LABELS.get(normalize_shipment_status(value), "Order Placed")
+
+
 def _parse_dt(value: Any) -> datetime | None:
     if isinstance(value, datetime):
         return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
@@ -193,6 +208,10 @@ def normalize_order(order: dict | None) -> dict | None:
     out["status"] = shipment
     out["payment_status_label"] = PAYMENT_LABELS[payment]
     out["shipment_status_label"] = SHIPMENT_LABELS[shipment]
+    out["customer_shipment_status_label"] = CUSTOMER_SHIPMENT_LABELS[shipment]
+    if out.get("courier"):
+        out["courier_name"] = courier_name(out["courier"])
+        out["tracking_url"] = tracking_url(out["courier"], out.get("tracking_number"))
     return out
 
 

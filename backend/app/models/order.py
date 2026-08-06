@@ -18,6 +18,7 @@ class OrderItem(BaseModel):
     name: Optional[str] = None
     quantity: int = Field(..., gt=0)
     price: Optional[float] = Field(None, ge=0)  # unit price at time of order
+    image: Optional[str] = None  # storefront thumbnail at time of order
 
 
 class ShippingAddress(BaseModel):

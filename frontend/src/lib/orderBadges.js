@@ -33,6 +33,14 @@ export const SHIPMENT_BADGE = {
   returned: { bg: '#F3F4F6', color: '#6B7280', label: 'Returned', Icon: RotateCcw },
 };
 
+// Customer-facing shipment badges. Customers never see the internal
+// "Order Received" stage — everything before fulfillment reads "Order Placed".
+export const CUSTOMER_SHIPMENT_BADGE = {
+  ...SHIPMENT_BADGE,
+  waiting_for_payment: { bg: '#FDF2F8', color: '#8B2956', label: 'Order Placed', Icon: CheckCircle },
+  order_received: { bg: '#FDF2F8', color: '#8B2956', label: 'Order Placed', Icon: CheckCircle },
+};
+
 // Legacy -> canonical maps so pre-split orders still resolve.
 const LEGACY_PAYMENT = {
   unpaid: 'awaiting_payment',
@@ -63,6 +71,19 @@ export function getShipmentBadge(status) {
   const key = String(status || '').toLowerCase();
   const canonical = LEGACY_SHIPMENT[key] || key;
   return SHIPMENT_BADGE[canonical] || SHIPMENT_BADGE.waiting_for_payment;
+}
+
+/** Shipment badge for customer-facing screens. */
+export function getCustomerShipmentBadge(status) {
+  const key = String(status || '').toLowerCase();
+  const canonical = LEGACY_SHIPMENT[key] || key;
+  return CUSTOMER_SHIPMENT_BADGE[canonical] || CUSTOMER_SHIPMENT_BADGE.waiting_for_payment;
+}
+
+/** Canonical shipment status key for an order (legacy values resolved). */
+export function getShipmentStatusKey(order) {
+  const key = String(order?.shipment_status || order?.status || '').toLowerCase();
+  return LEGACY_SHIPMENT[key] || key || 'waiting_for_payment';
 }
 
 // Orders written before payment/shipment were split only carry `status`.

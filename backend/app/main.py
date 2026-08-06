@@ -13,10 +13,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 
-from .config import settings
+from .config import settings, ROOT_DIR
 from .db import close_db, get_db
-from .routes import addresses, admin, auth, contact, health, newsletter, orders, payments, profile
+from .routes import addresses, admin, auth, contact, health, newsletter, orders, payments, profile, products
 from .services.order_service import order_service
 
 # How often the unpaid-order sweeper runs.
@@ -91,6 +93,15 @@ def create_app() -> FastAPI:
     app.include_router(profile.router, prefix="/api")
     app.include_router(addresses.router, prefix="/api")
     app.include_router(admin.router, prefix="/api")
+    # Products - public endpoints
+    app.include_router(products.router, prefix="/api")
+    # Products - admin endpoints
+    app.include_router(products.admin_router, prefix="/api")
+
+    # ---- Static files (uploads) ----
+    upload_dir = ROOT_DIR / "uploads"
+    if upload_dir.exists():
+        app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
 
     return app
 

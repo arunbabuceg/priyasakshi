@@ -16,6 +16,8 @@ import ProfilePage from '@/pages/ProfilePage.jsx';
 import AddressesPage from '@/pages/AddressesPage.jsx';
 import AdminLayout from '@/pages/admin/AdminLayout.jsx';
 import AdminDashboard from '@/pages/admin/AdminDashboardPage.jsx';
+import AdminProductsPage from '@/pages/admin/AdminProductsPage.jsx';
+import AdminProductFormPage from '@/pages/admin/AdminProductFormPage.jsx';
 import AdminOrdersPage from '@/pages/admin/AdminOrdersPage.jsx';
 import AdminOrderDetailsPage from '@/pages/admin/AdminOrderDetailsPage.jsx';
 import AdminCustomersPage from '@/pages/admin/AdminCustomersPage.jsx';
@@ -46,6 +48,9 @@ export default function App() {
             <Route path="/account/addresses" element={<AddressesPage />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<AdminProductsPage />} />
+              <Route path="products/new" element={<AdminProductFormPage />} />
+              <Route path="products/:id" element={<AdminProductFormPage />} />
               <Route path="orders" element={<AdminOrdersPage />} />
               <Route path="orders/:orderId" element={<AdminOrderDetailsPage />} />
               <Route path="customers" element={<AdminCustomersPage />} />

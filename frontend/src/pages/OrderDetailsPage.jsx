@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, Truck, CreditCard, Loader as Loader2, Package } from 'lucide-react';
+import { ArrowLeft, MapPin, Truck, CreditCard, Loader as Loader2, Package, Check } from 'lucide-react';
 import { getOrder } from '@/services/orderHistoryService';
 import { formatINR } from '@/lib/format';
 import { ClayShapes } from '@/components/ClayShapes';
@@ -47,7 +47,8 @@ export default function OrderDetailsPage() {
   const timeline = order?.timeline || [];
   const pay = getPaymentBadge(order?.payment_status);
   const st = getOrderBadge(order?.status);
-  const duplicate = pay.label.toLowerCase() === st.label.toLowerCase();
+  const trackingStatuses = ['shipped', 'out_for_delivery', 'delivered'];
+  const showTracking = trackingStatuses.includes(order?.status);
 
   return (
     <div className="min-h-screen bg-[#FAF5F8] relative overflow-hidden px-4 py-28 md:py-32">
@@ -98,25 +99,17 @@ export default function OrderDetailsPage() {
                   </div>
                 </div>
               </div>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <span
-                  className="clay-pill inline-flex items-center gap-1"
-                  style={{ background: pay.bg, color: pay.color }}
-                  data-testid="order-detail-payment"
-                >
-                  <pay.Icon className="w-3.5 h-3.5" />
-                  {pay.label}
-                </span>
-                {!duplicate && (
-                  <span
-                    className="clay-pill inline-flex items-center gap-1"
-                    style={{ background: st.bg, color: st.color }}
-                    data-testid="order-detail-status"
-                  >
-                    <st.Icon className="w-3.5 h-3.5" />
-                    {st.label}
-                  </span>
-                )}
+              <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                <div className="clay-card-cream px-4 py-3 flex items-center gap-2" data-testid="order-detail-payment">
+                  <Check className="w-4 h-4" style={{ color: pay.color }} />
+                  <span className="text-xs uppercase tracking-widest text-[#2E2825]/50">Payment</span>
+                  <span className="font-medium text-sm" style={{ color: pay.color }}>{pay.label}</span>
+                </div>
+                <div className="clay-card-cream px-4 py-3 flex items-center gap-2" data-testid="order-detail-status">
+                  <Check className="w-4 h-4" style={{ color: st.color }} />
+                  <span className="text-xs uppercase tracking-widest text-[#2E2825]/50">Order</span>
+                  <span className="font-medium text-sm" style={{ color: st.color }}>{st.label}</span>
+                </div>
               </div>
             </div>
 
@@ -169,22 +162,22 @@ export default function OrderDetailsPage() {
             </div>
 
             {/* Tracking */}
-            {(order.tracking_number || order.courier || order.estimated_delivery) && (
+            {showTracking && (order.tracking_number || order.courier || order.estimated_delivery) && (
               <div className="clay-card p-6 sm:p-8" data-testid="order-detail-tracking">
                 <h2 className="font-serif-display text-2xl text-[#2E2825] mb-4 flex items-center gap-2">
                   <Truck className="w-5 h-5" /> Tracking
                 </h2>
                 <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                  {order.tracking_number && (
-                    <div>
-                      <div className="text-xs uppercase tracking-widest text-[#2E2825]/50">Tracking Number</div>
-                      <div className="font-medium text-[#2E2825] mt-1">{order.tracking_number}</div>
-                    </div>
-                  )}
                   {order.courier && (
                     <div>
                       <div className="text-xs uppercase tracking-widest text-[#2E2825]/50">Courier</div>
                       <div className="font-medium text-[#2E2825] mt-1">{order.courier}</div>
+                    </div>
+                  )}
+                  {order.tracking_number && (
+                    <div>
+                      <div className="text-xs uppercase tracking-widest text-[#2E2825]/50">Tracking Number</div>
+                      <div className="font-medium text-[#2E2825] mt-1">{order.tracking_number}</div>
                     </div>
                   )}
                   {order.estimated_delivery && (

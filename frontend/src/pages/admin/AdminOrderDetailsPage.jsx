@@ -15,7 +15,15 @@ const formatDate = (iso) => {
   }
 };
 
-const STATUS_OPTIONS = ['received', 'pending_payment', 'paid', 'confirmed', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
+const ORDER_STATUS_OPTIONS = [
+  { value: 'order_received', label: 'Order Received' },
+  { value: 'preparing', label: 'Preparing' },
+  { value: 'packed', label: 'Packed' },
+  { value: 'shipped', label: 'Shipped' },
+  { value: 'out_for_delivery', label: 'Out for Delivery' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'cancelled', label: 'Cancelled' },
+];
 
 export default function AdminOrderDetailsPage() {
   const { orderId } = useParams();
@@ -103,8 +111,8 @@ export default function AdminOrderDetailsPage() {
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <span className="clay-pill inline-flex items-center gap-1" style={{ background: pay.bg, color: pay.color }}><pay.Icon className="w-3.5 h-3.5" />{pay.label}</span>
-            <span className="clay-pill inline-flex items-center gap-1" style={{ background: st.bg, color: st.color }}><st.Icon className="w-3.5 h-3.5" />{st.label}</span>
+            <span className="clay-pill inline-flex items-center gap-1" style={{ background: pay.bg, color: pay.color }} data-testid="admin-order-payment-status"><pay.Icon className="w-3.5 h-3.5" />Payment: {pay.label}</span>
+            <span className="clay-pill inline-flex items-center gap-1" style={{ background: st.bg, color: st.color }} data-testid="admin-order-status-badge"><st.Icon className="w-3.5 h-3.5" />{st.label}</span>
           </div>
         </motion.div>
 
@@ -148,33 +156,34 @@ export default function AdminOrderDetailsPage() {
 
         {/* Update form */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="clay-card p-6 sm:p-8">
-          <h2 className="font-serif-display text-2xl text-[#8B2956] mb-5 flex items-center gap-2"><Truck className="w-5 h-5" /> Update Order</h2>
+          <h2 className="font-serif-display text-2xl text-[#8B2956] mb-2 flex items-center gap-2"><Truck className="w-5 h-5" /> Update Order</h2>
+          <p className="text-xs text-[#2E2825]/60 mb-5">Payment status is read-only and set automatically by the payment provider. Edit the fields below to update the order lifecycle and fulfillment details.</p>
           <form className="space-y-4" onSubmit={handleSave}>
             <div className="grid sm:grid-cols-2 gap-4">
               <label className="block">
                 <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Order Status</span>
-                <select className="clay-input mt-1.5" value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}>
-                  {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                <select className="clay-input mt-1.5" value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} data-testid="admin-order-status-select">
+                  {ORDER_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </label>
               <label className="block">
                 <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Courier</span>
-                <input className="clay-input mt-1.5" value={form.courier} onChange={(e) => setForm((f) => ({ ...f, courier: e.target.value }))} placeholder="e.g. BlueDart" />
+                <input className="clay-input mt-1.5" value={form.courier} onChange={(e) => setForm((f) => ({ ...f, courier: e.target.value }))} placeholder="e.g. BlueDart" data-testid="admin-order-courier-input" />
               </label>
               <label className="block">
                 <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Tracking Number</span>
-                <input className="clay-input mt-1.5" value={form.tracking_number} onChange={(e) => setForm((f) => ({ ...f, tracking_number: e.target.value }))} />
+                <input className="clay-input mt-1.5" value={form.tracking_number} onChange={(e) => setForm((f) => ({ ...f, tracking_number: e.target.value }))} data-testid="admin-order-tracking-input" />
               </label>
               <label className="block">
                 <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Estimated Delivery</span>
-                <input type="date" className="clay-input mt-1.5" value={form.estimated_delivery} onChange={(e) => setForm((f) => ({ ...f, estimated_delivery: e.target.value }))} />
+                <input type="date" className="clay-input mt-1.5" value={form.estimated_delivery} onChange={(e) => setForm((f) => ({ ...f, estimated_delivery: e.target.value }))} data-testid="admin-order-eta-input" />
               </label>
             </div>
             <label className="block">
               <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Internal Notes</span>
-              <textarea className="clay-input mt-1.5 min-h-[100px] resize-none" value={form.internal_notes} onChange={(e) => setForm((f) => ({ ...f, internal_notes: e.target.value }))} placeholder="Notes visible only to admins" />
+              <textarea className="clay-input mt-1.5 min-h-[100px] resize-none" value={form.internal_notes} onChange={(e) => setForm((f) => ({ ...f, internal_notes: e.target.value }))} placeholder="Notes visible only to admins" data-testid="admin-order-notes-input" />
             </label>
-            <button type="submit" disabled={saving} className="clay-btn-primary h-14 px-8 flex items-center gap-2 disabled:opacity-70">
+            <button type="submit" disabled={saving} className="clay-btn-primary h-14 px-8 flex items-center gap-2 disabled:opacity-70" data-testid="admin-order-save-btn">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {saving ? 'Saving…' : 'Save Changes'}
             </button>

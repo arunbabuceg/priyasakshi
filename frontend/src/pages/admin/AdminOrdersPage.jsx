@@ -13,8 +13,8 @@ const formatDate = (iso) => {
   }
 };
 
-const STATUS_OPTIONS = ['all', 'received', 'pending_payment', 'paid', 'confirmed', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
-const PAYMENT_OPTIONS = ['all', 'unpaid', 'pending', 'paid'];
+const STATUS_OPTIONS = ['all', 'order_received', 'preparing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
+const PAYMENT_OPTIONS = ['all', 'awaiting_payment', 'paid', 'failed', 'refunded'];
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -50,11 +50,11 @@ export default function AdminOrdersPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select className="clay-input md:w-44" value={status} onChange={(e) => setStatus(e.target.value)}>
-          {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s === 'all' ? 'All statuses' : s}</option>)}
+        <select className="clay-input md:w-44 capitalize" value={status} onChange={(e) => setStatus(e.target.value)}>
+          {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s === 'all' ? 'All statuses' : s.replace(/_/g, ' ')}</option>)}
         </select>
-        <select className="clay-input md:w-44" value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)}>
-          {PAYMENT_OPTIONS.map((s) => <option key={s} value={s}>{s === 'all' ? 'All payments' : s}</option>)}
+        <select className="clay-input md:w-44 capitalize" value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)}>
+          {PAYMENT_OPTIONS.map((s) => <option key={s} value={s}>{s === 'all' ? 'All payments' : s.replace(/_/g, ' ')}</option>)}
         </select>
       </div>
 

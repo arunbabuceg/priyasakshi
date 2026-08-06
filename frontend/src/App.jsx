@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import HomePage from '@/pages/HomePage.jsx';
+import ProductPage from '@/pages/ProductPage.jsx';
 import AuthPage from '@/pages/AuthPage.jsx';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage.jsx';
 import ResetPasswordPage from '@/pages/ResetPasswordPage.jsx';
@@ -30,6 +31,7 @@ export default function App() {
         <CartProvider>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/products/:slug" element={<ProductPage />} />
             <Route path="/login" element={<AuthPage mode="login" />} />
             <Route path="/register" element={<AuthPage mode="register" />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />

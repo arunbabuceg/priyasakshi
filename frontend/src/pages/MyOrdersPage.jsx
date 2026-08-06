@@ -5,7 +5,8 @@ import { ArrowLeft, Package, Loader as Loader2 } from 'lucide-react';
 import { getMyOrders } from '@/services/orderHistoryService';
 import { formatINR } from '@/lib/format';
 import { ClayShapes } from '@/components/ClayShapes';
-import { getPaymentBadge, getShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
+import { getPaymentBadge, getCustomerShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
+import { getOrderItemImage } from '@/lib/orderItemImage';
 
 const formatDate = (iso) => {
   try {
@@ -82,7 +83,8 @@ export default function MyOrdersPage() {
             <ul className="mt-8 space-y-4">
               {orders.map((o, i) => {
                 const pay = getPaymentBadge(o.payment_status);
-                const ship = getShipmentBadge(readShipmentStatus(o));
+                const ship = getCustomerShipmentBadge(readShipmentStatus(o));
+                const thumbnail = getOrderItemImage(o.items?.[0]);
                 return (
                   <motion.li
                     key={o.id}
@@ -96,10 +98,14 @@ export default function MyOrdersPage() {
                       data-testid={`order-row-${o.id}`}
                     >
                       <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                        className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
                         style={{ background: '#fff', boxShadow: 'inset 0 -3px 6px rgba(138,115,130,0.15), inset 0 3px 6px rgba(255,255,255,0.9)' }}
                       >
-                        <Package className="w-5 h-5 text-[#8B2956]" />
+                        {thumbnail ? (
+                          <img src={thumbnail} alt="" loading="lazy" className="w-full h-full object-cover" />
+                        ) : (
+                          <Package className="w-5 h-5 text-[#8B2956]" />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-serif-display text-lg text-[#2E2825] truncate">

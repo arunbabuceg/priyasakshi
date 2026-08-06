@@ -9,7 +9,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import List
 
-from .status import payment_status_label, shipment_status_label
+from .couriers import courier_name, tracking_url
+from .status import customer_shipment_status_label, payment_status_label
 
 
 def _shell(brand: str, content: str) -> str:
@@ -92,7 +93,7 @@ def customer_order_html(brand: str, order: dict, owner_email: str) -> str:
         f"<h3 style='color:#8B2956'>Shipping To</h3>"
         f"<p>{_address_block(order.get('shipping'))}</p>"
         f"<p style='background:#F3EBDC;padding:12px 16px;border-radius:12px'>"
-        f"<strong>Order Status:</strong> Order Received</p>"
+        f"<strong>Order Status:</strong> Order Placed</p>"
         f"<p style='margin-top:24px;font-size:13px;color:#2E2825'>"
         f"Need help? Reply to this email or write to {owner_email}.</p>"
     )
@@ -122,12 +123,12 @@ def password_reset_html(brand: str, reset_url: str) -> str:
 
 
 def order_status_update_html(brand: str, order: dict, frontend_url: str) -> str:
-    label = shipment_status_label(order.get("shipment_status") or order.get("status"))
+    label = customer_shipment_status_label(order.get("shipment_status") or order.get("status"))
     payment_label = payment_status_label(order.get("payment_status"))
 
     tracking_block = ""
     if order.get("tracking_number"):
-        courier = order.get("courier") or "our courier"
+        courier = courier_name(order.get("courier")) or "our courier"
         tracking_block = (
             f"<p style='background:#F3EBDC;padding:14px 16px;border-radius:12px;margin:16px 0'>"
             f"<strong>Courier:</strong> {courier}<br>"
@@ -139,6 +140,13 @@ def order_status_update_html(brand: str, order: dict, frontend_url: str) -> str:
             except Exception:
                 ed = order["estimated_delivery"]
             tracking_block += f"<br><strong>Estimated Delivery:</strong> {ed}"
+        track_url = tracking_url(order.get("courier"), order.get("tracking_number"))
+        if track_url:
+            tracking_block += (
+                f"<br><a href='{track_url}' style='display:inline-block;margin-top:10px;"
+                f"background:#8B2956;color:#fff;padding:10px 20px;border-radius:999px;"
+                f"text-decoration:none;font-weight:600'>Track Package →</a>"
+            )
         tracking_block += "</p>"
 
     timeline = order.get("timeline", [])

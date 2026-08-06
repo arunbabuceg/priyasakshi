@@ -116,6 +116,7 @@ export default function CheckoutForm({ onBack }) {
         name: i.product.name,
         quantity: i.quantity,
         price: i.product.price,
+        image: i.product.images?.[0],
       })),
       shipping: {
         line1: form.shipping_address,

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Package, Loader as Loader2 } from 'lucide-react';
+import { ArrowLeft, Package, Loader as Loader2, FileText } from 'lucide-react';
 import { getMyOrders } from '@/services/orderHistoryService';
+import { downloadInvoice } from '@/services/invoiceService';
 import { formatINR } from '@/lib/format';
 import { ClayShapes } from '@/components/ClayShapes';
 import { getPaymentBadge, getCustomerShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
@@ -148,6 +149,19 @@ export default function MyOrdersPage() {
                           <ship.Icon className="w-3.5 h-3.5" />
                           {ship.label}
                         </span>
+                        {o.payment_status === 'paid' && o.invoice_number && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downloadInvoice(o.id);
+                            }}
+                            className="clay-btn-ghost h-8 px-3 inline-flex items-center gap-1.5 text-xs"
+                            data-testid={`order-download-invoice-${o.id}`}
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            Invoice
+                          </button>
+                        )}
                         <span className="font-serif-display text-xl text-[#8B2956] ml-1" data-testid={`order-amount-${o.id}`}>
                           {formatINR(o.total)}
                         </span>

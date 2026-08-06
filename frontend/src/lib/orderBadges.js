@@ -8,65 +8,64 @@ import {
   Truck,
   PackageCheck,
   Ban,
-  CircleDot,
+  Hourglass,
 } from 'lucide-react';
 
 // Payment status is read-only (set by the payment flow).
 export const PAYMENT_BADGE = {
-  paid: { bg: '#DCFCE7', color: '#15803D', label: 'Paid', Icon: CheckCircle },
   awaiting_payment: { bg: '#FEF3C7', color: '#B45309', label: 'Awaiting Payment', Icon: Clock },
+  paid: { bg: '#DCFCE7', color: '#15803D', label: 'Paid', Icon: CheckCircle },
   failed: { bg: '#FEE2E2', color: '#DC2626', label: 'Failed', Icon: XCircle },
   refunded: { bg: '#F3F4F6', color: '#6B7280', label: 'Refunded', Icon: RotateCcw },
+  cancelled: { bg: '#FEE2E2', color: '#DC2626', label: 'Cancelled', Icon: Ban },
 };
 
-// Order status is admin-editable (lifecycle).
-export const ORDER_BADGE = {
-  order_received: { bg: '#FEF3C7', color: '#B45309', label: 'Order Received', Icon: CheckCircle },
+// Shipment status is admin-controlled fulfillment progress.
+export const SHIPMENT_BADGE = {
+  waiting_for_payment: { bg: '#FEF3C7', color: '#B45309', label: 'Waiting for Payment', Icon: Hourglass },
+  order_received: { bg: '#FDF2F8', color: '#8B2956', label: 'Order Received', Icon: CheckCircle },
   preparing: { bg: '#DBEAFE', color: '#2563EB', label: 'Preparing', Icon: Loader },
   packed: { bg: '#F3E8FF', color: '#9333EA', label: 'Packed', Icon: Package },
   shipped: { bg: '#E0E7FF', color: '#4F46E5', label: 'Shipped', Icon: Truck },
   out_for_delivery: { bg: '#E0E7FF', color: '#4F46E5', label: 'Out for Delivery', Icon: Truck },
   delivered: { bg: '#DCFCE7', color: '#15803D', label: 'Delivered', Icon: PackageCheck },
   cancelled: { bg: '#FEE2E2', color: '#DC2626', label: 'Cancelled', Icon: Ban },
+  returned: { bg: '#F3F4F6', color: '#6B7280', label: 'Returned', Icon: RotateCcw },
 };
 
-const PAYMENT_FALLBACK = { bg: '#FEF3C7', color: '#B45309', label: 'Awaiting Payment', Icon: Clock };
-const ORDER_FALLBACK = { bg: '#F5EBF0', color: '#2E2825', label: 'Order Received', Icon: CircleDot };
-
-// Legacy -> canonical maps so old badges still resolve after the split.
+// Legacy -> canonical maps so pre-split orders still resolve.
 const LEGACY_PAYMENT = {
   unpaid: 'awaiting_payment',
   pending: 'awaiting_payment',
   awaiting: 'awaiting_payment',
-  awaiting_payment: 'awaiting_payment',
-  paid: 'paid',
-  failed: 'failed',
-  refunded: 'refunded',
+  pending_payment: 'awaiting_payment',
+  verified: 'paid',
+  canceled: 'cancelled',
 };
 
-const LEGACY_ORDER = {
+const LEGACY_SHIPMENT = {
   received: 'order_received',
-  pending_payment: 'order_received',
-  paid: 'preparing',
+  pending_payment: 'waiting_for_payment',
+  awaiting_payment: 'waiting_for_payment',
+  paid: 'order_received',
   confirmed: 'preparing',
   processing: 'preparing',
-  preparing: 'preparing',
-  packed: 'packed',
-  shipped: 'shipped',
-  out_for_delivery: 'out_for_delivery',
-  delivered: 'delivered',
-  cancelled: 'cancelled',
+  canceled: 'cancelled',
 };
 
 export function getPaymentBadge(status) {
   const key = String(status || '').toLowerCase();
   const canonical = LEGACY_PAYMENT[key] || key;
-  return PAYMENT_BADGE[canonical] || { ...PAYMENT_FALLBACK, label: status || 'Awaiting Payment' };
+  return PAYMENT_BADGE[canonical] || PAYMENT_BADGE.awaiting_payment;
 }
 
-export function getOrderBadge(status) {
+export function getShipmentBadge(status) {
   const key = String(status || '').toLowerCase();
-  const canonical = LEGACY_ORDER[key] || key;
-  if (!key) return ORDER_BADGE.order_received;
-  return ORDER_BADGE[canonical] || { ...ORDER_FALLBACK, label: status };
+  const canonical = LEGACY_SHIPMENT[key] || key;
+  return SHIPMENT_BADGE[canonical] || SHIPMENT_BADGE.waiting_for_payment;
+}
+
+// Orders written before payment/shipment were split only carry `status`.
+export function readShipmentStatus(order) {
+  return order?.shipment_status || order?.status;
 }

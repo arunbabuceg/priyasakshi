@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, Truck, CreditCard, Loader as Loader2, Package, Check } from 'lucide-react';
+import { ArrowLeft, MapPin, Truck, CreditCard, Loader as Loader2, Package } from 'lucide-react';
 import { getOrder } from '@/services/orderHistoryService';
 import { formatINR } from '@/lib/format';
 import { ClayShapes } from '@/components/ClayShapes';
-import { getPaymentBadge, getOrderBadge } from '@/lib/orderBadges';
+import { getPaymentBadge, getShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
 
 const formatDate = (iso) => {
   try {
@@ -46,9 +46,9 @@ export default function OrderDetailsPage() {
   const shipping = order?.shipping || {};
   const timeline = order?.timeline || [];
   const pay = getPaymentBadge(order?.payment_status);
-  const st = getOrderBadge(order?.status);
-  const trackingStatuses = ['shipped', 'out_for_delivery', 'delivered'];
-  const showTracking = trackingStatuses.includes(order?.status);
+  const ship = getShipmentBadge(readShipmentStatus(order));
+  const trackingLabels = ['Shipped', 'Out for Delivery', 'Delivered'];
+  const showTracking = trackingLabels.includes(ship.label);
 
   return (
     <div className="min-h-screen bg-[#FAF5F8] relative overflow-hidden px-4 py-28 md:py-32">
@@ -101,14 +101,14 @@ export default function OrderDetailsPage() {
               </div>
               <div className="mt-5 flex flex-col sm:flex-row gap-3">
                 <div className="clay-card-cream px-4 py-3 flex items-center gap-2" data-testid="order-detail-payment">
-                  <Check className="w-4 h-4" style={{ color: pay.color }} />
-                  <span className="text-xs uppercase tracking-widest text-[#2E2825]/50">Payment</span>
+                  <pay.Icon className="w-4 h-4" style={{ color: pay.color }} />
+                  <span className="text-xs uppercase tracking-widest text-[#2E2825]/50">Payment Status</span>
                   <span className="font-medium text-sm" style={{ color: pay.color }}>{pay.label}</span>
                 </div>
-                <div className="clay-card-cream px-4 py-3 flex items-center gap-2" data-testid="order-detail-status">
-                  <Check className="w-4 h-4" style={{ color: st.color }} />
-                  <span className="text-xs uppercase tracking-widest text-[#2E2825]/50">Order</span>
-                  <span className="font-medium text-sm" style={{ color: st.color }}>{st.label}</span>
+                <div className="clay-card-cream px-4 py-3 flex items-center gap-2" data-testid="order-detail-shipment">
+                  <ship.Icon className="w-4 h-4" style={{ color: ship.color }} />
+                  <span className="text-xs uppercase tracking-widest text-[#2E2825]/50">Shipment Status</span>
+                  <span className="font-medium text-sm" style={{ color: ship.color }}>{ship.label}</span>
                 </div>
               </div>
             </div>

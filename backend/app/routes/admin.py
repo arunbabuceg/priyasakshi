@@ -21,7 +21,7 @@ from ..models.admin import (
     AdminMessageUpdate,
     AdminOrderUpdate,
 )
-from ..services.admin_service import admin_service
+from ..services.admin_service import admin_service, ShipmentStatusError
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -34,14 +34,19 @@ async def dashboard(admin=Depends(get_admin_user)):
 @router.get("/orders")
 async def list_orders(
     search: str | None = Query(default=None),
-    status: str | None = Query(default=None),
+    shipment_status: str | None = Query(default=None),
+    status: str | None = Query(default=None, description="Legacy alias for shipment_status"),
     payment_status: str | None = Query(default=None),
     limit: int = Query(default=100, ge=1, le=500),
     skip: int = Query(default=0, ge=0),
     admin=Depends(get_admin_user),
 ):
     orders = await admin_service.list_orders(
-        search=search, status=status, payment_status=payment_status, limit=limit, skip=skip
+        search=search,
+        shipment_status=shipment_status or status,
+        payment_status=payment_status,
+        limit=limit,
+        skip=skip,
     )
     return {"ok": True, "orders": orders, "total": len(orders)}
 
@@ -58,7 +63,10 @@ async def get_order(order_id: str, admin=Depends(get_admin_user)):
 async def update_order(
     order_id: str, payload: AdminOrderUpdate, admin=Depends(get_admin_user)
 ):
-    updated = await admin_service.update_order(order_id, payload)
+    try:
+        updated = await admin_service.update_order(order_id, payload)
+    except ShipmentStatusError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     if not updated:
         raise HTTPException(status_code=404, detail="Order not found")
     return {"ok": True, "order": updated}

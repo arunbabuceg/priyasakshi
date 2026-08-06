@@ -15,19 +15,33 @@ from pymongo import ReturnDocument
 from ..db import get_db, serialize_doc, serialize_docs
 from ..models.admin import AdminOrderUpdate
 from .email_service import email_service
-from .status import normalize_order, normalize_orders, ORDER_STATUSES
+from .status import (
+    normalize_order,
+    normalize_orders,
+    normalize_payment_status,
+    normalize_shipment_status,
+    PAID_ONLY_SHIPMENT_STATUSES,
+    SHIPMENT_LABELS,
+    SHIPMENT_STATUSES,
+)
+
+
+class ShipmentStatusError(ValueError):
+    """Raised when a shipment status transition breaks a business rule."""
 
 logger = logging.getLogger("priya_sakshi.admin")
 
-# Statuses that trigger a customer-facing email when an admin transitions to
-# them. Maps canonical order status -> (email subject suffix, timeline label, note).
+# Shipment statuses that trigger a customer-facing email when an admin
+# transitions to them. Maps canonical shipment status -> timeline note.
 STATUS_TRANSITIONS = {
-    "preparing": ("Order confirmed", "Order Confirmed", "Your order is confirmed and being prepared."),
-    "packed": ("Order packed", "Packed", "Your order has been packed."),
-    "shipped": ("Order shipped", "Shipped", "Your order is on its way."),
-    "out_for_delivery": ("Out for delivery", "Out for Delivery", "Your order is out for delivery."),
-    "delivered": ("Order delivered", "Delivered", "Your order has been delivered."),
-    "cancelled": ("Order cancelled", "Cancelled", "Your order has been cancelled."),
+    "order_received": "We have received your order.",
+    "preparing": "Your order is being prepared.",
+    "packed": "Your order has been packed.",
+    "shipped": "Your order is on its way.",
+    "out_for_delivery": "Your order is out for delivery.",
+    "delivered": "Your order has been delivered.",
+    "cancelled": "Your order has been cancelled.",
+    "returned": "Your order has been returned.",
 }
 
 
@@ -44,10 +58,17 @@ class AdminService:
 
         total_orders = await orders.count_documents({})
         # Count by normalized order status; legacy values map into these buckets.
-        pending = await orders.count_documents({"status": {"$in": ["received", "pending_payment", "confirmed", "paid", "order_received", "preparing"]}})
-        processing = await orders.count_documents({"status": {"$in": ["processing", "packed"]}})
-        shipped = await orders.count_documents({"status": {"$in": ["shipped", "out_for_delivery"]}})
-        delivered = await orders.count_documents({"status": "delivered"})
+        def status_query(values: list[str]) -> dict:
+            return {"$or": [{"shipment_status": {"$in": values}}, {"shipment_status": {"$exists": False}, "status": {"$in": values}}]}
+
+        pending = await orders.count_documents(
+            status_query(["waiting_for_payment", "pending_payment", "received", "order_received", "paid"])
+        )
+        processing = await orders.count_documents(
+            status_query(["preparing", "confirmed", "processing", "packed"])
+        )
+        shipped = await orders.count_documents(status_query(["shipped", "out_for_delivery"]))
+        delivered = await orders.count_documents(status_query(["delivered"]))
 
         # Revenue = sum of totals for paid orders.
         revenue_pipeline = [
@@ -60,7 +81,7 @@ class AdminService:
         total_customers = await db.users.count_documents({})
 
         recent_cursor = orders.find({}).sort("created_at", -1).limit(8)
-        recent = serialize_docs(await recent_cursor.to_list(length=8))
+        recent = normalize_orders(serialize_docs(await recent_cursor.to_list(length=8)))
 
         return {
             "total_orders": total_orders,
@@ -78,16 +99,12 @@ class AdminService:
         self,
         *,
         search: Optional[str] = None,
-        status: Optional[str] = None,
+        shipment_status: Optional[str] = None,
         payment_status: Optional[str] = None,
         limit: int = 100,
         skip: int = 0,
     ) -> list[dict]:
         query: dict = {}
-        if status and status != "all":
-            query["status"] = status
-        if payment_status and payment_status != "all":
-            query["payment_status"] = payment_status
         if search:
             s = search.strip()
             if s:
@@ -97,19 +114,53 @@ class AdminService:
                     {"phone": {"$regex": s, "$options": "i"}},
                     {"id": {"$regex": s, "$options": "i"}},
                 ]
-        cursor = get_db().orders.find(query).sort("created_at", -1).skip(skip).limit(limit)
-        return normalize_orders(serialize_docs(await cursor.to_list(length=limit)))
+        cursor = get_db().orders.find(query).sort("created_at", -1)
+        orders = normalize_orders(serialize_docs(await cursor.to_list(length=None)))
+
+        # Status filters run on normalized values so legacy documents (which
+        # stored a single mixed `status`) are matched correctly.
+        if shipment_status and shipment_status != "all":
+            wanted = normalize_shipment_status(shipment_status)
+            orders = [o for o in orders if o["shipment_status"] == wanted]
+        if payment_status and payment_status != "all":
+            wanted = normalize_payment_status(payment_status)
+            orders = [o for o in orders if o["payment_status"] == wanted]
+
+        return orders[skip : skip + limit]
 
     async def get_order(self, order_id: str) -> dict | None:
         return normalize_order(serialize_doc(await get_db().orders.find_one({"id": order_id})))
 
     async def update_order(self, order_id: str, payload: AdminOrderUpdate) -> dict | None:
+        """Admin update. Only shipment status and fulfillment fields are
+        editable — payment status is read-only and owned by the payment flow.
+        """
+        existing = await get_db().orders.find_one({"id": order_id})
+        if not existing:
+            return None
+        current = normalize_order(serialize_doc(existing))
+
+        requested = payload.shipment_status or payload.status
+        new_shipment: str | None = None
+        if requested is not None:
+            if requested not in SHIPMENT_STATUSES:
+                raise ShipmentStatusError(f"Unknown shipment status '{requested}'")
+            if (
+                requested in PAID_ONLY_SHIPMENT_STATUSES
+                and current["payment_status"] != "paid"
+            ):
+                raise ShipmentStatusError(
+                    f"Shipment status cannot be set to '{SHIPMENT_LABELS[requested]}' "
+                    "until the payment is Paid."
+                )
+            if requested != current["shipment_status"]:
+                new_shipment = requested
+
         update_fields: dict = {}
-        if payload.status is not None:
-            # Only accept canonical order statuses; ignore anything else so a
-            # stale client cannot corrupt the lifecycle.
-            if payload.status in ORDER_STATUSES:
-                update_fields["status"] = payload.status
+        if new_shipment:
+            update_fields["shipment_status"] = new_shipment
+            # Mirrored so older clients reading `status` stay correct.
+            update_fields["status"] = new_shipment
         if payload.courier is not None:
             update_fields["courier"] = payload.courier
         if payload.tracking_number is not None:
@@ -120,19 +171,20 @@ class AdminService:
             update_fields["internal_notes"] = payload.internal_notes
 
         timeline_entry = None
-        if payload.status is not None:
-            transition = STATUS_TRANSITIONS.get(payload.status)
-            if transition:
-                _, label, note = transition
-                note_text = note
+        if new_shipment:
+            note_text = STATUS_TRANSITIONS.get(new_shipment)
+            if note_text:
                 if payload.tracking_number:
-                    note_text = f"{note} Tracking: {payload.tracking_number}"
+                    note_text = f"{note_text} Tracking: {payload.tracking_number}"
                 timeline_entry = {
-                    "status": payload.status,
-                    "label": label,
+                    "status": new_shipment,
+                    "label": SHIPMENT_LABELS[new_shipment],
                     "at": _now(),
                     "note": note_text,
                 }
+
+        if not update_fields and not timeline_entry:
+            return current
 
         update_doc: dict = {"$set": update_fields}
         if timeline_entry:

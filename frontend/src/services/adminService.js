@@ -14,11 +14,11 @@ export const getAdminDashboard = async () => {
   }
 };
 
-export const getAdminOrders = async ({ search, status, paymentStatus, limit = 100, skip = 0 } = {}) => {
+export const getAdminOrders = async ({ search, shipmentStatus, paymentStatus, limit = 100, skip = 0 } = {}) => {
   try {
     const params = { limit, skip };
     if (search) params.search = search;
-    if (status && status !== 'all') params.status = status;
+    if (shipmentStatus && shipmentStatus !== 'all') params.shipment_status = shipmentStatus;
     if (paymentStatus && paymentStatus !== 'all') params.payment_status = paymentStatus;
     const { data } = await apiClient.get('/admin/orders', { params });
     return { ok: true, data: data.orders || [] };

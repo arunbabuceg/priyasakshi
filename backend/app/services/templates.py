@@ -9,6 +9,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import List
 
+from .status import payment_status_label, shipment_status_label
+
 
 def _shell(brand: str, content: str) -> str:
     return (
@@ -120,17 +122,8 @@ def password_reset_html(brand: str, reset_url: str) -> str:
 
 
 def order_status_update_html(brand: str, order: dict, frontend_url: str) -> str:
-    status = order.get("status", "updated")
-    status_labels = {
-        "confirmed": "Confirmed",
-        "processing": "Processing",
-        "packed": "Packed",
-        "shipped": "Shipped",
-        "out_for_delivery": "Out for Delivery",
-        "delivered": "Delivered",
-        "cancelled": "Cancelled",
-    }
-    label = status_labels.get(status, status)
+    label = shipment_status_label(order.get("shipment_status") or order.get("status"))
+    payment_label = payment_status_label(order.get("payment_status"))
 
     tracking_block = ""
     if order.get("tracking_number"):
@@ -165,8 +158,9 @@ def order_status_update_html(brand: str, order: dict, frontend_url: str) -> str:
     orders_link = f"{frontend_url}/account/orders"
     content = (
         f"<h2 style='color:#8B2956;margin-top:0'>Hi {order.get('customer_name','there')},</h2>"
-        f"<p>Your order <strong>#{str(order.get('id',''))[:8]}</strong> has been updated to "
-        f"<strong>{label}</strong>.</p>"
+        f"<p>Your order <strong>#{str(order.get('id',''))[:8]}</strong> has been updated.</p>"
+        f"<p><strong>Payment Status:</strong> {payment_label}<br>"
+        f"<strong>Shipment Status:</strong> {label}</p>"
         f"{tracking_block}"
         f"{timeline_html}"
         f"<p style='margin-top:24px;font-size:13px;color:#2E2825'>"

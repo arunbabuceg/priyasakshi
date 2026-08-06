@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, Loader as Loader2 } from 'lucide-react';
 import { getAdminOrders } from '@/services/adminService';
 import { formatINR } from '@/lib/format';
-import { getPaymentBadge, getOrderBadge } from '@/lib/orderBadges';
+import { getPaymentBadge, getShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
 
 const formatDate = (iso) => {
   try {
@@ -13,27 +13,27 @@ const formatDate = (iso) => {
   }
 };
 
-const STATUS_OPTIONS = ['all', 'order_received', 'preparing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
-const PAYMENT_OPTIONS = ['all', 'awaiting_payment', 'paid', 'failed', 'refunded'];
+const SHIPMENT_OPTIONS = ['all', 'waiting_for_payment', 'order_received', 'preparing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned'];
+const PAYMENT_OPTIONS = ['all', 'awaiting_payment', 'paid', 'failed', 'refunded', 'cancelled'];
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('all');
+  const [shipmentStatus, setShipmentStatus] = useState('all');
   const [paymentStatus, setPaymentStatus] = useState('all');
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
     const t = setTimeout(() => {
-      getAdminOrders({ search, status, paymentStatus })
+      getAdminOrders({ search, shipmentStatus, paymentStatus })
         .then((res) => mounted && setOrders(res.data || []))
         .catch(() => mounted && setOrders([]))
         .finally(() => mounted && setLoading(false));
     }, 250);
     return () => { mounted = false; clearTimeout(t); };
-  }, [search, status, paymentStatus]);
+  }, [search, shipmentStatus, paymentStatus]);
 
   return (
     <div>
@@ -50,8 +50,8 @@ export default function AdminOrdersPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select className="clay-input md:w-44 capitalize" value={status} onChange={(e) => setStatus(e.target.value)}>
-          {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s === 'all' ? 'All statuses' : s.replace(/_/g, ' ')}</option>)}
+        <select className="clay-input md:w-44 capitalize" value={shipmentStatus} onChange={(e) => setShipmentStatus(e.target.value)}>
+          {SHIPMENT_OPTIONS.map((s) => <option key={s} value={s}>{s === 'all' ? 'All shipments' : s.replace(/_/g, ' ')}</option>)}
         </select>
         <select className="clay-input md:w-44 capitalize" value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)}>
           {PAYMENT_OPTIONS.map((s) => <option key={s} value={s}>{s === 'all' ? 'All payments' : s.replace(/_/g, ' ')}</option>)}
@@ -77,13 +77,13 @@ export default function AdminOrdersPage() {
                 <th className="pb-3 pr-4 hidden sm:table-cell">Date</th>
                 <th className="pb-3 pr-4">Amount</th>
                 <th className="pb-3 pr-4">Payment</th>
-                <th className="pb-3">Status</th>
+                <th className="pb-3">Shipment</th>
               </tr>
             </thead>
             <tbody>
               {orders.map((o) => {
                 const pay = getPaymentBadge(o.payment_status);
-                const st = getOrderBadge(o.status);
+                const ship = getShipmentBadge(readShipmentStatus(o));
                 return (
                   <tr key={o.id} className="border-b border-[#EADFE5] last:border-0 hover:bg-[#FAF5F8]/60">
                     <td className="py-3 pr-4">
@@ -102,8 +102,8 @@ export default function AdminOrdersPage() {
                       </span>
                     </td>
                     <td className="py-3">
-                      <span className="clay-pill inline-flex items-center gap-1" style={{ background: st.bg, color: st.color }}>
-                        <st.Icon className="w-3 h-3" />{st.label}
+                      <span className="clay-pill inline-flex items-center gap-1" style={{ background: ship.bg, color: ship.color }}>
+                        <ship.Icon className="w-3 h-3" />{ship.label}
                       </span>
                     </td>
                   </tr>

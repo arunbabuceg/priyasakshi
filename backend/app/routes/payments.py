@@ -76,6 +76,7 @@ async def verify_payment(payload: VerifyPaymentRequest):
     )
 
     if not is_valid:
+        await order_service.mark_payment_failed(payload.order_id)
         logger.warning(
             "Razorpay signature verification failed for order_id=%s razorpay_order_id=%s",
             payload.order_id,

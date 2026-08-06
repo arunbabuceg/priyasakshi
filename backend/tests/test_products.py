@@ -169,5 +169,20 @@ def test_seeded_products_have_valid_image_paths():
                 f"Image path '{img}' should start with /uploads/products/"
 
 
+def test_fix_old_image_paths_method_exists():
+    """Test that ProductService has _fix_old_image_paths method for migrating old paths."""
+    from app.services.product_service import ProductService
+    from app.services.product_service import product_service
+    
+    # Method should exist
+    assert hasattr(product_service, '_fix_old_image_paths'), \
+        "ProductService should have _fix_old_image_paths method"
+    
+    # Should be async
+    import inspect
+    assert inspect.iscoroutinefunction(product_service._fix_old_image_paths), \
+        "_fix_old_image_paths should be an async method"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

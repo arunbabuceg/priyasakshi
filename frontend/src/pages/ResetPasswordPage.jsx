@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { ArrowLeft, Lock, Eye, EyeOff } from 'lucide-react';
 import { resetPassword } from '@/services/authService';
 import { ClayShapes } from '@/components/ClayShapes';
 
@@ -11,6 +11,7 @@ export default function ResetPasswordPage() {
   const token = params.get('token') || '';
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -44,16 +45,25 @@ export default function ResetPasswordPage() {
           <label className="block">
             <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Password</span>
             <div className="relative mt-1.5">
-            <Lock className="w-4 h-4 text-[#2E2825]/40 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
-<input
-  className="clay-input !pl-11"
-                type="password"
+              <Lock className="w-4 h-4 text-[#2E2825]/40 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+              <input
+                className="clay-input !pl-11 !pr-11"
+                type={showPwd ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 data-testid="reset-password"
                 minLength={8}
                 required
               />
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); setShowPwd((s) => !s); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2E2825]/40 hover:text-[#2E2825]/70 z-10"
+                tabIndex={-1}
+                aria-label={showPwd ? 'Hide password' : 'Show password'}
+              >
+                {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </label>
           <button

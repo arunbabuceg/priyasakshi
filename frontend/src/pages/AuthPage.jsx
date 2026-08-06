@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { ArrowLeft, Mail, Lock, User } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { ClayShapes } from '@/components/ClayShapes';
 
@@ -85,19 +85,35 @@ export default function AuthPage({ mode = 'login' }) {
   );
 }
 
-const Field = ({ icon: Icon, label, value, onChange, type, testId }) => (
-  <label className="block">
-    <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">{label}</span>
-    <div className="relative mt-1.5">
-     <Icon className="w-4 h-4 text-[#2E2825]/40 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
-<input
-  className="clay-input !pl-11"
-        type={type}
-        value={value}
-        onChange={onChange}
-        data-testid={testId}
-        required
-      />
-    </div>
-  </label>
-);
+const Field = ({ icon: Icon, label, value, onChange, type, testId }) => {
+  const [showPwd, setShowPwd] = useState(false);
+  const isPassword = type === 'password';
+  const inputType = isPassword ? (showPwd ? 'text' : 'password') : type;
+  return (
+    <label className="block">
+      <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">{label}</span>
+      <div className="relative mt-1.5">
+        <Icon className="w-4 h-4 text-[#2E2825]/40 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+        <input
+          className="clay-input !pl-11 !pr-11"
+          type={inputType}
+          value={value}
+          onChange={onChange}
+          data-testid={testId}
+          required
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); setShowPwd((s) => !s); }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2E2825]/40 hover:text-[#2E2825]/70 z-10"
+            tabIndex={-1}
+            aria-label={showPwd ? 'Hide password' : 'Show password'}
+          >
+            {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        )}
+      </div>
+    </label>
+  );
+};

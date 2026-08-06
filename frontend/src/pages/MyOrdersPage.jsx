@@ -20,6 +20,17 @@ const formatDate = (iso) => {
   }
 };
 
+const getOrderTitle = (items) => {
+  if (!items || items.length === 0) return { first: 'Order', rest: null };
+  const first = items[0]?.name || items[0]?.product_id || 'Product';
+  if (items.length === 1) return { first, rest: null };
+  if (items.length === 2) {
+    const second = items[1]?.name || items[1]?.product_id || 'item';
+    return { first, rest: `+ ${second}` };
+  }
+  return { first, rest: `+${items.length - 1} more items` };
+};
+
 
 
 export default function MyOrdersPage() {
@@ -108,9 +119,15 @@ export default function MyOrdersPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-serif-display text-lg text-[#2E2825] truncate">
-                          Order #{String(o.id).slice(0, 8)}
-                        </div>
+                        {(() => {
+                          const { first, rest } = getOrderTitle(o.items);
+                          return (
+                            <>
+                              <div className="font-serif-display text-lg text-[#2E2825] truncate">{first}</div>
+                              {rest && <div className="text-sm text-[#2E2825]/60 truncate">{rest}</div>}
+                            </>
+                          );
+                        })()}
                         <div className="text-xs text-[#2E2825]/60 mt-0.5">{formatDate(o.created_at)}</div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">

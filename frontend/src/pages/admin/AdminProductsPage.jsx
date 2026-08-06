@@ -4,6 +4,7 @@ import { Search, Loader2, Plus, Edit, Copy, Eye, EyeOff, Trash2, Image as ImageI
 import { toast } from 'sonner';
 import { getAdminProducts, deleteProduct, duplicateProduct, toggleProductStatus } from '@/services/adminProductService';
 import { formatINR } from '@/lib/format';
+import { imageUrl } from '@/lib/imageUrl';
 
 const CATEGORY_OPTIONS = [
   { value: '', label: 'All Categories' },
@@ -192,7 +193,7 @@ export default function AdminProductsPage() {
                   <td className="py-3 pr-4">
                     {p.images && p.images.length > 0 ? (
                       <img
-                        src={p.images[0]}
+                        src={imageUrl(p.images[0])}
                         alt={p.name}
                         className="w-12 h-12 rounded-xl object-cover bg-[#F5EBF0]"
                       />

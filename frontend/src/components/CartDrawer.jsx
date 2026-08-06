@@ -4,6 +4,7 @@ import { Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCart } from '@/context/CartContext';
 import { formatINR } from '@/lib/format';
+import { imageUrl } from '@/lib/imageUrl';
 import CheckoutForm from './CheckoutForm';
 
 export default function CartDrawer() {
@@ -70,7 +71,7 @@ export default function CartDrawer() {
                             }}
                           >
                             <img
-                              src={it.product.images?.[0]}
+                              src={imageUrl(it.product.images?.[0])}
                               alt={it.product.name}
                               className="w-full h-full object-cover"
                             />

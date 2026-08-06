@@ -7,6 +7,7 @@ import { formatINR } from '@/lib/format';
 import { ClayShapes } from '@/components/ClayShapes';
 import { getPaymentBadge, getCustomerShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
 import { getOrderItemImage } from '@/lib/orderItemImage';
+import { imageUrl } from '@/lib/imageUrl';
 
 const formatDate = (iso) => {
   try {
@@ -113,7 +114,7 @@ export default function MyOrdersPage() {
                         style={{ background: '#fff', boxShadow: 'inset 0 -3px 6px rgba(138,115,130,0.15), inset 0 3px 6px rgba(255,255,255,0.9)' }}
                       >
                         {thumbnail ? (
-                          <img src={thumbnail} alt="" loading="lazy" className="w-full h-full object-cover" />
+                          <img src={imageUrl(thumbnail)} alt="" loading="lazy" className="w-full h-full object-cover" />
                         ) : (
                           <Package className="w-5 h-5 text-[#8B2956]" />
                         )}

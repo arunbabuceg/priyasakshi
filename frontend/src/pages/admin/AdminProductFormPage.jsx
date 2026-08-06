@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, X, GripVertical, Loader2, Upload, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAdminProduct, createProduct, updateProduct, uploadProductImage } from '@/services/adminProductService';
+import { imageUrl } from '@/lib/imageUrl';
 
 const CATEGORIES = [
   { value: 'saree', label: 'Sarees' },
@@ -455,7 +456,7 @@ export default function AdminProductFormPage() {
                   draggedIndex === index ? 'opacity-50' : ''
                 } ${index === 0 ? 'ring-2 ring-[#8B2956]' : ''}`}
               >
-                <img src={img} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
+                <img src={imageUrl(img)} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
                 <div className="absolute top-1 left-1 bg-[#8B2956] text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">
                   {index === 0 ? 'Main' : index + 1}
                 </div>

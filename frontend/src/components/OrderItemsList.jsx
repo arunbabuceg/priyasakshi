@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Package } from 'lucide-react';
 import { formatINR } from '@/lib/format';
 import { getOrderItemImage } from '@/lib/orderItemImage';
+import { imageUrl } from '@/lib/imageUrl';
 
 const THUMB = 'w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 overflow-hidden';
 const THUMB_SHADOW = {
@@ -11,7 +12,8 @@ const THUMB_SHADOW = {
 
 function ItemThumb({ item }) {
   const [failed, setFailed] = useState(false);
-  const src = failed ? null : getOrderItemImage(item);
+  const rawSrc = failed ? null : getOrderItemImage(item);
+  const src = rawSrc ? imageUrl(rawSrc) : null;
 
   return (
     <div className={THUMB} style={THUMB_SHADOW}>

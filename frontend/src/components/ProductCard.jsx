@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
 import { formatINR } from '@/lib/format';
+import { imageUrl } from '@/lib/imageUrl';
 
 const PALETTES = [
   { bg: '#F5D9DD', accent: '#C99AA0' },
@@ -52,7 +53,7 @@ export default function ProductCard({ product, index = 0 }) {
         }}
       >
         <motion.img
-          src={primaryImage}
+          src={imageUrl(primaryImage)}
           alt={product.name}
           className="w-full h-full object-cover"
           whileHover={{ scale: 1.06, rotate: -1 }}

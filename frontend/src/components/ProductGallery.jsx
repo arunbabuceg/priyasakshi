@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { imageUrl } from '@/lib/imageUrl';
 
 /**
  * ProductGallery — primary image with thumbnail row when a product has
@@ -9,7 +10,7 @@ export default function ProductGallery({ images = [], alt, testId }) {
   const [active, setActive] = useState(0);
 
   if (safe.length === 0) return null;
-  const current = safe[Math.min(active, safe.length - 1)];
+  const current = imageUrl(safe[Math.min(active, safe.length - 1)]);
 
   return (
     <div className="w-full h-full flex flex-col gap-3" data-testid={testId}>
@@ -39,7 +40,7 @@ export default function ProductGallery({ images = [], alt, testId }) {
               aria-label={`Show image ${i + 1}`}
               data-testid={testId ? `${testId}-thumb-${i}` : undefined}
             >
-              <img src={src} alt={`${alt} — ${i + 1}`} className="w-full h-full object-cover rounded-xl" />
+              <img src={imageUrl(src)} alt={`${alt} — ${i + 1}`} className="w-full h-full object-cover rounded-xl" />
             </button>
           ))}
         </div>

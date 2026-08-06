@@ -5,11 +5,19 @@ from pydantic import BaseModel, Field
 
 
 class AdminOrderUpdate(BaseModel):
-    status: Optional[str] = Field(
+    """Admin-editable order fields.
+
+    Payment status is deliberately absent — it is read-only and owned by the
+    payment flow. ``status`` is accepted as a legacy alias for
+    ``shipment_status`` so older admin clients keep working.
+    """
+
+    shipment_status: Optional[str] = Field(
         None,
-        description="New order status: confirmed, processing, packed, shipped, "
-        "out_for_delivery, delivered, cancelled",
+        description="New shipment status: waiting_for_payment, order_received, "
+        "preparing, packed, shipped, out_for_delivery, delivered, cancelled, returned",
     )
+    status: Optional[str] = Field(None, description="Legacy alias for shipment_status")
     courier: Optional[str] = Field(None, max_length=120)
     tracking_number: Optional[str] = Field(None, max_length=120)
     estimated_delivery: Optional[str] = Field(

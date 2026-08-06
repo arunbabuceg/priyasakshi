@@ -17,6 +17,7 @@ from typing import Optional
 import resend
 
 from ..config import settings
+from .status import normalize_shipment_status
 
 logger = logging.getLogger("priya_sakshi.email")
 
@@ -138,16 +139,20 @@ class EmailService:
         from .templates import order_status_update_html
 
         html = order_status_update_html(settings.brand_name, order, settings.frontend_url)
-        status = order.get("status", "updated")
+        shipment = normalize_shipment_status(
+            order.get("shipment_status") or order.get("status")
+        )
         subject_map = {
-            "confirmed": f"Your order is confirmed — {settings.brand_name}",
+            "order_received": f"We've received your order — {settings.brand_name}",
+            "preparing": f"Your order is being prepared — {settings.brand_name}",
             "packed": f"Your order is packed — {settings.brand_name}",
             "shipped": f"Your order has shipped — {settings.brand_name}",
             "out_for_delivery": f"Your order is out for delivery — {settings.brand_name}",
             "delivered": f"Your order has been delivered — {settings.brand_name}",
             "cancelled": f"Your order has been cancelled — {settings.brand_name}",
+            "returned": f"Your order has been returned — {settings.brand_name}",
         }
-        subject = subject_map.get(status, f"Order update — {settings.brand_name}")
+        subject = subject_map.get(shipment, f"Order update — {settings.brand_name}")
         await self._send(order.get("customer_email", ""), subject, html)
 
 

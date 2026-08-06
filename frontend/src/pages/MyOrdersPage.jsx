@@ -5,7 +5,7 @@ import { ArrowLeft, Package, Loader as Loader2 } from 'lucide-react';
 import { getMyOrders } from '@/services/orderHistoryService';
 import { formatINR } from '@/lib/format';
 import { ClayShapes } from '@/components/ClayShapes';
-import { getPaymentBadge, getOrderBadge } from '@/lib/orderBadges';
+import { getPaymentBadge, getShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
 
 const formatDate = (iso) => {
   try {
@@ -82,8 +82,7 @@ export default function MyOrdersPage() {
             <ul className="mt-8 space-y-4">
               {orders.map((o, i) => {
                 const pay = getPaymentBadge(o.payment_status);
-                const st = getOrderBadge(o.status);
-                const duplicate = pay.label.toLowerCase() === st.label.toLowerCase();
+                const ship = getShipmentBadge(readShipmentStatus(o));
                 return (
                   <motion.li
                     key={o.id}
@@ -117,16 +116,14 @@ export default function MyOrdersPage() {
                           <pay.Icon className="w-3.5 h-3.5" />
                           {pay.label}
                         </span>
-                        {!duplicate && (
-                          <span
-                            className="clay-pill inline-flex items-center gap-1"
-                            style={{ background: st.bg, color: st.color }}
-                            data-testid={`order-status-${o.id}`}
-                          >
-                            <st.Icon className="w-3.5 h-3.5" />
-                            {st.label}
-                          </span>
-                        )}
+                        <span
+                          className="clay-pill inline-flex items-center gap-1"
+                          style={{ background: ship.bg, color: ship.color }}
+                          data-testid={`order-shipment-${o.id}`}
+                        >
+                          <ship.Icon className="w-3.5 h-3.5" />
+                          {ship.label}
+                        </span>
                         <span className="font-serif-display text-xl text-[#8B2956] ml-1" data-testid={`order-amount-${o.id}`}>
                           {formatINR(o.total)}
                         </span>

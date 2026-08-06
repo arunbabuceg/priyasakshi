@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Package, Clock, Truck, CircleCheck as CheckCircle, TrendingUp, Users, ArrowRight } from 'lucide-react';
 import { getAdminDashboard } from '@/services/adminService';
 import { formatINR } from '@/lib/format';
-import { getPaymentBadge, getOrderBadge } from '@/lib/orderBadges';
+import { getPaymentBadge, getShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
 
 const formatDate = (iso) => {
   try {
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
               <tbody>
                 {data.recent_orders.map((o) => {
                   const pay = getPaymentBadge(o.payment_status);
-                  const st = getOrderBadge(o.status);
+                  const ship = getShipmentBadge(readShipmentStatus(o));
                   return (
                     <tr key={o.id} className="border-b border-[#EADFE5] last:border-0">
                       <td className="py-3 pr-4">
@@ -133,11 +133,9 @@ export default function AdminDashboard() {
                           <span className="clay-pill inline-flex items-center gap-1" style={{ background: pay.bg, color: pay.color }}>
                             <pay.Icon className="w-3 h-3" />{pay.label}
                           </span>
-                          {pay.label.toLowerCase() !== st.label.toLowerCase() && (
-                            <span className="clay-pill inline-flex items-center gap-1" style={{ background: st.bg, color: st.color }}>
-                              <st.Icon className="w-3 h-3" />{st.label}
-                            </span>
-                          )}
+                          <span className="clay-pill inline-flex items-center gap-1" style={{ background: ship.bg, color: ship.color }}>
+                            <ship.Icon className="w-3 h-3" />{ship.label}
+                          </span>
                         </div>
                       </td>
                     </tr>

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, MapPin, Package, Truck, CreditCard, Save, Loader as Loader2 } from 'lucide-react';
 import { getAdminOrder, updateAdminOrder } from '@/services/adminService';
 import { formatINR } from '@/lib/format';
-import { getPaymentBadge, getOrderBadge } from '@/lib/orderBadges';
+import { getPaymentBadge, getShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
 
 const formatDate = (iso) => {
   try {
@@ -15,7 +15,8 @@ const formatDate = (iso) => {
   }
 };
 
-const ORDER_STATUS_OPTIONS = [
+const SHIPMENT_STATUS_OPTIONS = [
+  { value: 'waiting_for_payment', label: 'Waiting for Payment' },
   { value: 'order_received', label: 'Order Received' },
   { value: 'preparing', label: 'Preparing' },
   { value: 'packed', label: 'Packed' },
@@ -23,6 +24,18 @@ const ORDER_STATUS_OPTIONS = [
   { value: 'out_for_delivery', label: 'Out for Delivery' },
   { value: 'delivered', label: 'Delivered' },
   { value: 'cancelled', label: 'Cancelled' },
+  { value: 'returned', label: 'Returned' },
+];
+
+// Shipment cannot progress past the pre-payment stage until payment is Paid.
+const PAID_ONLY_STATUSES = [
+  'order_received',
+  'preparing',
+  'packed',
+  'shipped',
+  'out_for_delivery',
+  'delivered',
+  'returned',
 ];
 
 export default function AdminOrderDetailsPage() {
@@ -31,7 +44,7 @@ export default function AdminOrderDetailsPage() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ status: '', courier: '', tracking_number: '', estimated_delivery: '', internal_notes: '' });
+  const [form, setForm] = useState({ shipment_status: '', courier: '', tracking_number: '', estimated_delivery: '', internal_notes: '' });
 
   useEffect(() => {
     let mounted = true;
@@ -41,7 +54,7 @@ export default function AdminOrderDetailsPage() {
         if (res.ok) {
           setOrder(res.data);
           setForm({
-            status: res.data.status || '',
+            shipment_status: readShipmentStatus(res.data) || 'waiting_for_payment',
             courier: res.data.courier || '',
             tracking_number: res.data.tracking_number || '',
             estimated_delivery: res.data.estimated_delivery ? res.data.estimated_delivery.slice(0, 10) : '',
@@ -57,7 +70,7 @@ export default function AdminOrderDetailsPage() {
     e.preventDefault();
     setSaving(true);
     const payload = {
-      status: form.status || undefined,
+      shipment_status: form.shipment_status || undefined,
       courier: form.courier || undefined,
       tracking_number: form.tracking_number || undefined,
       estimated_delivery: form.estimated_delivery ? new Date(form.estimated_delivery).toISOString() : undefined,
@@ -67,6 +80,7 @@ export default function AdminOrderDetailsPage() {
     setSaving(false);
     if (res.ok) {
       setOrder(res.data);
+      setForm((f) => ({ ...f, shipment_status: readShipmentStatus(res.data) || f.shipment_status }));
       toast.success('Order updated');
     } else {
       toast.error(res.error || 'Could not update order');
@@ -88,7 +102,8 @@ export default function AdminOrderDetailsPage() {
   const shipping = order.shipping || {};
   const timeline = order.timeline || [];
   const pay = getPaymentBadge(order.payment_status);
-  const st = getOrderBadge(order.status);
+  const ship = getShipmentBadge(readShipmentStatus(order));
+  const isPaid = order.payment_status === 'paid';
 
   return (
     <div>
@@ -112,7 +127,7 @@ export default function AdminOrderDetailsPage() {
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
             <span className="clay-pill inline-flex items-center gap-1" style={{ background: pay.bg, color: pay.color }} data-testid="admin-order-payment-status"><pay.Icon className="w-3.5 h-3.5" />Payment: {pay.label}</span>
-            <span className="clay-pill inline-flex items-center gap-1" style={{ background: st.bg, color: st.color }} data-testid="admin-order-status-badge"><st.Icon className="w-3.5 h-3.5" />{st.label}</span>
+            <span className="clay-pill inline-flex items-center gap-1" style={{ background: ship.bg, color: ship.color }} data-testid="admin-order-shipment-badge"><ship.Icon className="w-3.5 h-3.5" />Shipment: {ship.label}</span>
           </div>
         </motion.div>
 
@@ -157,13 +172,22 @@ export default function AdminOrderDetailsPage() {
         {/* Update form */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="clay-card p-6 sm:p-8">
           <h2 className="font-serif-display text-2xl text-[#8B2956] mb-2 flex items-center gap-2"><Truck className="w-5 h-5" /> Update Order</h2>
-          <p className="text-xs text-[#2E2825]/60 mb-5">Payment status is read-only and set automatically by the payment provider. Edit the fields below to update the order lifecycle and fulfillment details.</p>
+          <p className="text-xs text-[#2E2825]/60 mb-5">
+            Payment status is read-only and set automatically by the payment provider.
+            {isPaid
+              ? ' Edit the fields below to update the shipment and fulfillment details.'
+              : ' Shipment status stays “Waiting for Payment” until the payment is Paid.'}
+          </p>
           <form className="space-y-4" onSubmit={handleSave}>
             <div className="grid sm:grid-cols-2 gap-4">
               <label className="block">
-                <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Order Status</span>
-                <select className="clay-input mt-1.5" value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} data-testid="admin-order-status-select">
-                  {ORDER_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                <span className="text-xs uppercase tracking-widest text-[#2E2825]/60 ml-3">Shipment Status</span>
+                <select className="clay-input mt-1.5" value={form.shipment_status} onChange={(e) => setForm((f) => ({ ...f, shipment_status: e.target.value }))} data-testid="admin-order-shipment-select">
+                  {SHIPMENT_STATUS_OPTIONS.map((s) => (
+                    <option key={s.value} value={s.value} disabled={!isPaid && PAID_ONLY_STATUSES.includes(s.value)}>
+                      {s.label}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label className="block">

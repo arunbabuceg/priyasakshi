@@ -44,5 +44,20 @@ class OrderCreate(BaseModel):
 class OrderResponse(BaseModel):
     ok: bool = True
     order_id: str
-    status: Literal["received", "pending_payment", "paid", "shipped", "cancelled"] = "received"
+    payment_status: Literal["awaiting_payment", "paid", "failed", "refunded", "cancelled"] = (
+        "awaiting_payment"
+    )
+    shipment_status: Literal[
+        "waiting_for_payment",
+        "order_received",
+        "preparing",
+        "packed",
+        "shipped",
+        "out_for_delivery",
+        "delivered",
+        "cancelled",
+        "returned",
+    ] = "waiting_for_payment"
+    # Legacy mirror of shipment_status for older clients.
+    status: str = "waiting_for_payment"
     message: str = "Order received. We will follow up over email shortly."

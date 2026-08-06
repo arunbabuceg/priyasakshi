@@ -15,7 +15,13 @@ from pymongo import ReturnDocument
 
 from ..db import get_db, serialize_doc, serialize_docs
 from ..models.order import OrderCreate
-from .status import normalize_order, normalize_orders, normalize_order_status
+from .status import (
+    normalize_order,
+    normalize_orders,
+    normalize_payment_status,
+    normalize_shipment_status,
+    payment_expiry_cutoff,
+)
 
 logger = logging.getLogger("priya_sakshi.orders")
 
@@ -31,17 +37,19 @@ class OrderService:
             "id": str(uuid.uuid4()),
             "user_id": user_id,
             "created_at": now,
-            "status": "order_received",
+            "shipment_status": "waiting_for_payment",
+            # Mirrored for backward compatibility with clients reading `status`.
+            "status": "waiting_for_payment",
             "payment_status": "awaiting_payment",
             "tracking_number": None,
             "courier": None,
             "estimated_delivery": None,
             "timeline": [
                 {
-                    "status": "order_received",
-                    "label": "Order Received",
+                    "status": "waiting_for_payment",
+                    "label": "Order Placed",
                     "at": now,
-                    "note": "Your order has been placed.",
+                    "note": "Your order has been placed. Awaiting payment.",
                 }
             ],
             "customer_name": payload.customer_name,
@@ -118,12 +126,11 @@ class OrderService:
     ) -> dict | None:
         """Called once the Razorpay signature has been verified.
 
-        Payment status becomes 'paid'. The order lifecycle is kept separate:
-        if the order is still at receipt stage we advance it to 'preparing',
-        but we never overwrite a later lifecycle stage an admin may have set.
+        Payment status becomes 'paid'. Shipment status automatically becomes
+        'Order Received', unless an admin has already moved it further along.
         """
         now = _now()
-        current = serialize_doc(await get_db().orders.find_one({"id": order_id}))
+        current = serialize_doc(await get_db().orders.find_one({"id": order_id})) or {}
         set_fields: dict = {
             "payment_status": "paid",
             "payment": {
@@ -134,11 +141,14 @@ class OrderService:
                 "verified_at": now,
             },
         }
-        # Advance lifecycle only from the receipt stage. Legacy 'received' /
-        # 'pending_payment' / 'paid' values also count as receipt-stage.
-        receipt_stages = {"order_received", "received", "pending_payment", "paid", None}
-        if normalize_order_status(current.get("status")) == "order_received" or current.get("status") in receipt_stages:
-            set_fields["status"] = "preparing"
+        # Advance shipment only out of the pre-payment stage; never overwrite a
+        # later stage an admin may have set.
+        current_shipment = normalize_shipment_status(
+            current.get("shipment_status") or current.get("status")
+        )
+        if current_shipment == "waiting_for_payment":
+            set_fields["shipment_status"] = "order_received"
+            set_fields["status"] = "order_received"
 
         updated = await get_db().orders.find_one_and_update(
             {"id": order_id},
@@ -156,6 +166,69 @@ class OrderService:
             return_document=ReturnDocument.AFTER,
         )
         return normalize_order(serialize_doc(updated))
+
+    async def mark_payment_failed(self, order_id: str) -> dict | None:
+        """Record a failed payment attempt; shipment stays pre-payment."""
+        now = _now()
+        updated = await get_db().orders.find_one_and_update(
+            {"id": order_id},
+            {
+                "$set": {"payment_status": "failed"},
+                "$push": {
+                    "timeline": {
+                        "status": "failed",
+                        "label": "Payment Failed",
+                        "at": now,
+                        "note": "Payment could not be verified.",
+                    }
+                },
+            },
+            return_document=ReturnDocument.AFTER,
+        )
+        return normalize_order(serialize_doc(updated))
+
+    async def cancel_expired_unpaid_orders(self) -> int:
+        """Cancel orders still awaiting payment past the 12-hour window.
+
+        Runs periodically from the app lifespan. Reads also apply the same rule
+        on the fly (see ``status.resolve_statuses``), so this only persists what
+        the API already reports.
+        """
+        cutoff = payment_expiry_cutoff().isoformat()
+        now = _now()
+        cursor = get_db().orders.find(
+            {
+                "created_at": {"$lt": cutoff},
+                "payment_status": {"$nin": ["paid", "refunded", "cancelled"]},
+            },
+            {"id": 1, "payment_status": 1},
+        )
+        cancelled = 0
+        for doc in await cursor.to_list(length=None):
+            if normalize_payment_status(doc.get("payment_status")) != "awaiting_payment":
+                continue
+            await get_db().orders.update_one(
+                {"id": doc["id"]},
+                {
+                    "$set": {
+                        "payment_status": "cancelled",
+                        "shipment_status": "cancelled",
+                        "status": "cancelled",
+                    },
+                    "$push": {
+                        "timeline": {
+                            "status": "cancelled",
+                            "label": "Cancelled",
+                            "at": now,
+                            "note": "Cancelled automatically — payment was not completed within 12 hours.",
+                        }
+                    },
+                },
+            )
+            cancelled += 1
+        if cancelled:
+            logger.info("Auto-cancelled %d unpaid order(s) past the payment window", cancelled)
+        return cancelled
 
 
 order_service = OrderService()

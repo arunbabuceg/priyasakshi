@@ -37,7 +37,9 @@ async def create_order(payload: OrderCreate, user=Depends(get_optional_user)):
     return OrderResponse(
         ok=True,
         order_id=order["id"],
-        status="received",
+        payment_status=order["payment_status"],
+        shipment_status=order["shipment_status"],
+        status=order["shipment_status"],
         message="Order received. Complete payment to confirm your order.",
     )
 

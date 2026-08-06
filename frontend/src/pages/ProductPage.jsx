@@ -237,6 +237,3 @@ const TrustBadge = ({ icon: Icon, label }) => (
     <span className="text-xs text-[#2E2825]/70 leading-tight">{label}</span>
   </div>
 );
-
-
-export default ProductPage

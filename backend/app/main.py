@@ -7,6 +7,7 @@ shapes in ``models``, HTTP handlers in ``routes``.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -16,12 +17,28 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .db import close_db, get_db
 from .routes import addresses, admin, auth, contact, health, newsletter, orders, payments, profile
+from .services.order_service import order_service
+
+# How often the unpaid-order sweeper runs.
+PAYMENT_SWEEP_INTERVAL_SECONDS = 15 * 60
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("priya_sakshi")
+
+
+async def _payment_expiry_sweeper() -> None:
+    """Cancel orders whose 12-hour payment window has elapsed."""
+    while True:
+        try:
+            await order_service.cancel_expired_unpaid_orders()
+        except asyncio.CancelledError:
+            raise
+        except Exception:  # pragma: no cover - infra failure path
+            logger.exception("Unpaid-order sweep failed")
+        await asyncio.sleep(PAYMENT_SWEEP_INTERVAL_SECONDS)
 
 
 @asynccontextmanager
@@ -32,8 +49,15 @@ async def lifespan(_: FastAPI):
         logger.info("Connected to MongoDB (db=%s)", settings.db_name)
     except Exception as exc:  # pragma: no cover - infra failure path
         logger.warning("MongoDB ping failed at startup: %s", exc)
+
+    sweeper = asyncio.create_task(_payment_expiry_sweeper())
     yield
     # Shutdown
+    sweeper.cancel()
+    try:
+        await sweeper
+    except asyncio.CancelledError:
+        pass
     await close_db()
     logger.info("MongoDB connection closed")
 

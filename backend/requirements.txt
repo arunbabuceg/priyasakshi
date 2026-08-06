@@ -26,6 +26,9 @@ PyJWT>=2.10.1
 # SMTP
 aiosmtplib>=4.0.2
 
+# PDF Generation
+reportlab>=4.0.0
+
 # Testing
 pytest>=8.4.1
 pytest-asyncio>=1.1.0

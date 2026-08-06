@@ -97,6 +97,14 @@ async def verify_payment(payload: VerifyPaymentRequest):
     await email_service.send_owner_order_notification(order)
     await email_service.send_order_confirmation(order)
 
+    # Send invoice email with PDF attachment
+    if order.get("invoice_number") and order.get("invoice_file_path"):
+        from .invoice_service import invoice_service
+        invoice_path = invoice_service.get_invoice_path(order)
+        if invoice_path:
+            _, full_path = invoice_path
+            await email_service.send_invoice_email(order, full_path, order["invoice_number"])
+
     return VerifyPaymentResponse(
         success=True,
         order_id=payload.order_id,

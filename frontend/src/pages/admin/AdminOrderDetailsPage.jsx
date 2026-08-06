@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { ArrowLeft, MapPin, Package, Truck, CreditCard, Save, ExternalLink, Loader as Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Package, Truck, CreditCard, Save, ExternalLink, Loader as Loader2, FileText, Mail } from 'lucide-react';
 import { getAdminOrder, updateAdminOrder } from '@/services/adminService';
+import { downloadInvoice, resendInvoiceEmail } from '@/services/invoiceService';
 import { formatINR } from '@/lib/format';
 import OrderItemsList from '@/components/OrderItemsList';
 import { getPaymentBadge, getShipmentBadge, readShipmentStatus } from '@/lib/orderBadges';
@@ -46,6 +47,7 @@ export default function AdminOrderDetailsPage() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [resending, setResending] = useState(false);
   const [form, setForm] = useState({ shipment_status: '', courier: '', tracking_number: '', estimated_delivery: '', internal_notes: '' });
 
   useEffect(() => {
@@ -87,6 +89,21 @@ export default function AdminOrderDetailsPage() {
       toast.success('Order updated');
     } else {
       toast.error(res.error || 'Could not update order');
+    }
+  };
+
+  const handleDownloadInvoice = () => {
+    downloadInvoice(orderId);
+  };
+
+  const handleResendInvoice = async () => {
+    setResending(true);
+    const res = await resendInvoiceEmail(orderId);
+    setResending(false);
+    if (res.ok) {
+      toast.success('Invoice email sent successfully');
+    } else {
+      toast.error(res.error || 'Could not resend invoice');
     }
   };
 
@@ -137,6 +154,28 @@ export default function AdminOrderDetailsPage() {
             <span className="clay-pill inline-flex items-center gap-1" style={{ background: pay.bg, color: pay.color }} data-testid="admin-order-payment-status"><pay.Icon className="w-3.5 h-3.5" />Payment: {pay.label}</span>
             <span className="clay-pill inline-flex items-center gap-1" style={{ background: ship.bg, color: ship.color }} data-testid="admin-order-shipment-badge"><ship.Icon className="w-3.5 h-3.5" />Shipment: {ship.label}</span>
           </div>
+          {/* Invoice Actions - only for paid orders */}
+          {order.payment_status === 'paid' && order.invoice_number && (
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                onClick={handleDownloadInvoice}
+                className="clay-btn-primary h-10 px-4 inline-flex items-center gap-2 text-sm"
+                data-testid="admin-download-invoice"
+              >
+                <FileText className="w-4 h-4" />
+                Download Invoice
+              </button>
+              <button
+                onClick={handleResendInvoice}
+                disabled={resending}
+                className="clay-btn-ghost h-10 px-4 inline-flex items-center gap-2 text-sm disabled:opacity-70"
+                data-testid="admin-resend-invoice"
+              >
+                {resending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                {resending ? 'Sending...' : 'Resend Invoice'}
+              </button>
+            </div>
+          )}
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-5">

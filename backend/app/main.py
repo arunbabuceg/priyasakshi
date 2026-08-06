@@ -18,7 +18,7 @@ import os
 
 from .config import settings, ROOT_DIR
 from .db import close_db, get_db
-from .routes import addresses, admin, auth, contact, health, newsletter, orders, payments, profile, products
+from .routes import addresses, admin, auth, contact, health, invoice, newsletter, orders, payments, profile, products
 from .services.order_service import order_service
 from .services.product_service import product_service
 
@@ -102,6 +102,7 @@ def create_app() -> FastAPI:
     app.include_router(profile.router, prefix="/api")
     app.include_router(addresses.router, prefix="/api")
     app.include_router(admin.router, prefix="/api")
+    app.include_router(invoice.router, prefix="/api")
     # Products - public endpoints
     app.include_router(products.router, prefix="/api")
     # Products - admin endpoints

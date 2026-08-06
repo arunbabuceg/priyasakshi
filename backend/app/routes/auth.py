@@ -7,6 +7,7 @@ path so login persists across refreshes without exposing tokens to JS.
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
+from ..config import settings
 from ..dependencies import clear_auth_cookies, get_current_user, set_auth_cookies
 from ..models.auth import (
     ForgotPasswordRequest,
@@ -59,6 +60,35 @@ async def refresh(payload: RefreshRequest, response: Response):
         tokens = await auth_service.refresh(payload.refresh_token)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
+    set_auth_cookies(response, tokens["access_token"], tokens["refresh_token"])
+    return TokenResponse(
+        access_token=tokens["access_token"],
+        refresh_token=tokens["refresh_token"],
+        user=tokens["user"],
+    )
+
+
+@router.post("/refresh-cookie", response_model=TokenResponse)
+async def refresh_from_cookie(request: Request, response: Response):
+    """Cookie-based token refresh.
+
+    Reads the ``ps_refresh_token`` HTTP-only cookie instead of requiring the
+    refresh token in the request body.  The frontend calls this endpoint on
+    page load when ``/auth/me`` returns 401, allowing sessions to survive
+    beyond the access-token lifetime without exposing tokens to JavaScript.
+    """
+    refresh_token = request.cookies.get("ps_refresh_token")
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No refresh token cookie present",
+        )
+    try:
+        tokens = await auth_service.refresh(refresh_token)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)
+        ) from exc
     set_auth_cookies(response, tokens["access_token"], tokens["refresh_token"])
     return TokenResponse(
         access_token=tokens["access_token"],

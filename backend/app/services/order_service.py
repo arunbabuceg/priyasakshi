@@ -154,7 +154,7 @@ class OrderService:
         # Generate invoice for the paid order
         try:
             from .invoice_service import invoice_service
-            invoice_number, invoice_file_path = invoice_service.generate_invoice(current)
+            invoice_number, invoice_file_path = await invoice_service.generate_invoice(current)
             set_fields["invoice_number"] = invoice_number
             set_fields["invoice_file_path"] = invoice_file_path
             set_fields["invoice_generated_at"] = now

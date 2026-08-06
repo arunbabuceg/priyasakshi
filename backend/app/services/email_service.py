@@ -7,17 +7,21 @@ hard-coded.
 
 If Resend is not configured (no RESEND_API_KEY), calls are logged and
 become no-ops so the rest of the app keeps working during local development.
+
+IMPORTANT: resend.Emails.send() is a synchronous call. To avoid blocking
+the asyncio event loop we dispatch it via run_in_executor so FastAPI's
+async handlers remain responsive.
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Optional
 
 import resend
 
 from ..config import settings
-from .status import normalize_shipment_status
 
 logger = logging.getLogger("priya_sakshi.email")
 
@@ -32,34 +36,44 @@ class EmailService:
         else:
             logger.info("Email service disabled (RESEND_API_KEY missing)")
 
-    async def _send(self, to: str | list[str], subject: str, html: str, attachments: list | None = None) -> None:
+    def _send_sync(self, params: dict) -> None:
+        """Synchronous Resend send — run this in an executor to avoid
+        blocking the event loop."""
+        response = resend.Emails.send(params)
+        logger.info(
+            "Email sent successfully to=%s response=%s",
+            params.get("to"),
+            response,
+        )
+
+    async def _send(
+        self,
+        to: str | list[str],
+        subject: str,
+        html: str,
+        attachments: list | None = None,
+    ) -> None:
         if not self._enabled:
             logger.info("[email disabled] to=%s subject=%s", to, subject)
             return
 
         recipients = [to] if isinstance(to, str) else to
 
+        params: resend.Emails.SendParams = {
+            "from": f"{settings.brand_name} <{settings.brand_from_email}>",
+            "to": recipients,
+            "subject": subject,
+            "html": html,
+        }
+
+        if attachments:
+            params["attachments"] = attachments
+
         try:
-            params: resend.Emails.SendParams = {
-                "from": f"{settings.brand_name} <{settings.brand_from_email}>",
-                "to": recipients,
-                "subject": subject,
-                "html": html,
-            }
-
-            if attachments:
-                params["attachments"] = attachments
-
-            response = resend.Emails.send(params)
-
-            logger.info(
-                "Email sent successfully to=%s response=%s",
-                recipients,
-                response,
-            )
-
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, self._send_sync, params)
         except Exception as exc:
-            logger.exception("Failed to send email: %s", exc)
+            logger.exception("Failed to send email to=%s subject=%s: %s", to, subject, exc)
 
     # -------- public API --------
     async def send_newsletter_welcome(self, email: str, name: Optional[str]) -> None:
@@ -116,15 +130,24 @@ class EmailService:
             html,
         )
 
-    async def send_invoice_email(self, order: dict, invoice_path: str, invoice_number: str) -> None:
-        """Send order confirmation email with invoice PDF attachment."""
+    async def send_invoice_email(
+        self,
+        order: dict,
+        invoice_path: str,
+        invoice_number: str,
+    ) -> None:
+        """Send order confirmation email with invoice PDF attachment.
+
+        ``invoice_path`` can be either a local filesystem path or a Cloudinary
+        (HTTPS) URL.  When it is a URL we download the PDF bytes; when it is a
+        local path we read the file directly.
+        """
         from datetime import datetime, timezone
 
         customer_name = order.get("customer_name", "Customer")
         order_id = str(order.get("id", ""))[:8]
         total = order.get("total", 0)
 
-        # Format total in INR
         try:
             total_formatted = f"₹{total:,.2f}"
         except (TypeError, ValueError):
@@ -154,19 +177,30 @@ class EmailService:
             f"</div>"
         )
 
-        # Prepare attachment
         attachments = []
         try:
             import base64
-            with open(invoice_path, "rb") as f:
-                pdf_data = base64.b64encode(f.read()).decode("utf-8")
+
+            if invoice_path.startswith("http://") or invoice_path.startswith("https://"):
+                # Cloudinary URL — download the PDF bytes
+                import httpx
+
+                async with httpx.AsyncClient(timeout=30) as client:
+                    resp = await client.get(invoice_path)
+                    resp.raise_for_status()
+                    pdf_data = base64.b64encode(resp.content).decode("utf-8")
+            else:
+                # Local filesystem path
+                with open(invoice_path, "rb") as f:
+                    pdf_data = base64.b64encode(f.read()).decode("utf-8")
+
             attachments.append({
                 "filename": f"{invoice_number}.pdf",
                 "data": pdf_data,
                 "type": "application/pdf",
             })
         except Exception as exc:
-            logger.warning("Could not attach invoice PDF: %s", exc)
+            logger.warning("Could not attach invoice PDF for order %s: %s", order_id, exc)
 
         await self._send(
             order["customer_email"],
@@ -199,6 +233,7 @@ class EmailService:
 
     async def send_order_status_update(self, order: dict) -> None:
         from .templates import order_status_update_html
+        from .status import normalize_shipment_status
 
         html = order_status_update_html(settings.brand_name, order, settings.frontend_url)
         shipment = normalize_shipment_status(

@@ -44,12 +44,34 @@ export const refresh = async (refreshToken) => {
   }
 };
 
+/**
+ * Refresh the session using the HTTP-only refresh-token cookie.
+ * Called automatically by AuthContext when /auth/me returns 401 so that
+ * sessions survive beyond the access-token lifetime after a browser restart.
+ */
+export const refreshFromCookie = async () => {
+  try {
+    const { data } = await apiClient.post('/auth/refresh-cookie', {});
+    return { ok: true, data };
+  } catch {
+    return { ok: false };
+  }
+};
+
+/**
+ * Fetch the currently authenticated user from the access-token cookie.
+ * Returns { ok, data, status } so callers can distinguish 401 from other errors.
+ */
 export const getMe = async () => {
   try {
     const { data } = await apiClient.get('/auth/me');
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: getErrorMessage(err) };
+    return {
+      ok: false,
+      error: getErrorMessage(err),
+      status: err?.response?.status ?? null,
+    };
   }
 };
 

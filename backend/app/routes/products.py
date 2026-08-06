@@ -241,41 +241,47 @@ async def upload_product_image(
     admin=Depends(get_admin_user),
 ):
     """Upload a product image (admin only).
-    
-    Accepts image files (jpg, jpeg, png, webp, gif) and returns a URL.
-    For production, this should upload to cloud storage (S3, GCS, etc.).
-    Currently stores in local uploads folder.
+
+    Accepts image files (jpg, jpeg, png, webp, gif).
+    Uploads to Cloudinary for persistent storage that survives redeploys.
+    Falls back to the local uploads folder when Cloudinary is not configured.
     """
     # Validate file type
     allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
     if file.content_type not in allowed_types:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type. Allowed: {', '.join(sorted(allowed_types))}"
+            detail=f"Invalid file type. Allowed: {', '.join(sorted(allowed_types))}",
         )
-    
-    # Max 5MB
+
+    # Max 5 MB
     max_size = 5 * 1024 * 1024
-    
-    # Read file content
     content = await file.read()
     if len(content) > max_size:
         raise HTTPException(status_code=400, detail="File too large. Maximum size is 5MB.")
-    
-    # Generate unique filename
+
+    from ..services import cloudinary_service
+
+    if cloudinary_service.is_configured():
+        # Upload to Cloudinary — URL survives redeploys
+        try:
+            image_url = await cloudinary_service.upload_image(content)
+            filename = image_url.rsplit("/", 1)[-1]
+            return {"ok": True, "url": image_url, "filename": filename}
+        except Exception as exc:
+            import logging
+            logging.getLogger("priya_sakshi.products").warning(
+                "Cloudinary upload failed, falling back to local: %s", exc
+            )
+
+    # Fallback: local filesystem (development / no Cloudinary)
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     filename = f"{uuid.uuid4()}.{ext}"
-    
-    # Create uploads directory if it doesn't exist (matches StaticFiles mount in main.py)
     upload_dir = ROOT_DIR / "uploads" / "products"
     upload_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Write file
     filepath = os.path.join(upload_dir, filename)
     with open(filepath, "wb") as f:
         f.write(content)
-    
-    # Return URL (relative path that can be served statically)
     image_url = f"/uploads/products/{filename}"
-    
+
     return {"ok": True, "url": image_url, "filename": filename}

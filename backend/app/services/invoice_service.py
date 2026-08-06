@@ -1,14 +1,21 @@
 """Invoice generation service.
 
-Generates professional PDF invoices for paid orders. The invoice is generated
-only once per order and stored on disk for reuse.
+Generates professional PDF invoices for paid orders using ReportLab.
+PDFs are written to an in-memory buffer, then uploaded to Cloudinary for
+persistent storage (survives Render redeploys). When Cloudinary is not
+configured the PDF is also written to the local uploads/invoices/ folder
+as a development fallback.
+
+The Cloudinary URL (or local relative path) is stored in the order
+document as ``invoice_file_path`` so it can be served later without
+regenerating the PDF.
 """
 
 from __future__ import annotations
 
+import io
 import logging
 import os
-import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -29,11 +36,11 @@ from ..config import settings, ROOT_DIR
 
 logger = logging.getLogger("priya_sakshi.invoice")
 
-# Invoice storage directory
+# Local fallback directory (used when Cloudinary is not configured)
 INVOICE_DIR = ROOT_DIR / "uploads" / "invoices"
 INVOICE_DIR.mkdir(parents=True, exist_ok=True)
 
-# Brand colors
+# Brand colours
 BRAND_COLOR = colors.HexColor("#8B2956")
 BRAND_LIGHT = colors.HexColor("#F5E6ED")
 TEXT_COLOR = colors.HexColor("#2E2825")
@@ -42,19 +49,24 @@ LINE_COLOR = colors.HexColor("#E0D2DD")
 
 
 class InvoiceService:
-    def _get_next_invoice_number(self) -> str:
-        """Generate the next invoice number in format INV-YYYY-000001."""
+    async def _get_next_invoice_number(self) -> str:
+        """Generate the next invoice number in format INV-YYYY-000001.
+
+        Uses Motor's async API so the event loop is never blocked.
+        """
         year = datetime.now(timezone.utc).year
-        # Import here to avoid circular imports
         from ..db import get_db
 
-        # Find the highest invoice number for the current year
-        cursor = get_db().orders.find(
-            {"invoice_number": {"$regex": f"^INV-{year}-"}},
-            {"invoice_number": 1},
-        ).sort("invoice_number", -1).limit(1)
-
-        docs = list(cursor)
+        cursor = (
+            get_db()
+            .orders.find(
+                {"invoice_number": {"$regex": f"^INV-{year}-"}},
+                {"invoice_number": 1},
+            )
+            .sort("invoice_number", -1)
+            .limit(1)
+        )
+        docs = await cursor.to_list(length=1)
         if docs:
             last_number = docs[0].get("invoice_number", f"INV-{year}-000000")
             try:
@@ -67,51 +79,90 @@ class InvoiceService:
         return f"INV-{year}-{seq:06d}"
 
     def _format_inr(self, amount: float) -> str:
-        """Format amount as Indian INR."""
         return f"₹{amount:,.2f}"
 
     def _format_date(self, iso_date: str) -> str:
-        """Format ISO date string to readable format."""
         try:
             dt = datetime.fromisoformat(iso_date.replace("Z", "+00:00"))
             return dt.strftime("%d %b %Y")
         except Exception:
             return iso_date
 
-    def generate_invoice(self, order: dict) -> tuple[str, str]:
+    async def generate_invoice(self, order: dict) -> tuple[str, str]:
         """Generate a PDF invoice for the given order.
 
         Returns:
-            tuple: (invoice_number, file_path)
+            tuple: (invoice_number, invoice_file_path)
+            where ``invoice_file_path`` is a Cloudinary URL when Cloudinary
+            is configured, otherwise a local relative path.
 
-        The invoice is generated only once and stored. Subsequent calls
-        return the existing invoice details.
+        The PDF is generated only once per order.  Subsequent calls reuse
+        the stored ``invoice_file_path`` from the order document.
         """
-        # Check if invoice already exists
-        existing_invoice = order.get("invoice_file_path")
+        # Reuse an existing invoice if we already have one stored
+        existing_path = order.get("invoice_file_path")
         existing_number = order.get("invoice_number")
-        if existing_invoice and existing_number:
-            full_path = ROOT_DIR / existing_invoice.lstrip("/")
+        if existing_path and existing_number:
+            # If it's a Cloudinary URL it's always available
+            if existing_path.startswith("http://") or existing_path.startswith("https://"):
+                logger.info(
+                    "Reusing existing Cloudinary invoice %s for order %s",
+                    existing_number,
+                    order.get("id"),
+                )
+                return existing_number, existing_path
+            # Local path — only reuse if the file still exists
+            full_path = ROOT_DIR / existing_path.lstrip("/")
             if full_path.exists():
-                logger.info("Reusing existing invoice %s for order %s", existing_number, order.get("id"))
-                return existing_number, str(full_path)
+                logger.info(
+                    "Reusing existing local invoice %s for order %s",
+                    existing_number,
+                    order.get("id"),
+                )
+                return existing_number, existing_path
 
-        invoice_number = self._get_next_invoice_number()
+        invoice_number = await self._get_next_invoice_number()
+
+        # Build PDF in memory
+        pdf_bytes = self._create_pdf_bytes(order, invoice_number)
+
+        # Try Cloudinary first (persistent)
+        from . import cloudinary_service
+
+        if cloudinary_service.is_configured():
+            try:
+                url = await cloudinary_service.upload_pdf(pdf_bytes, invoice_number)
+                logger.info(
+                    "Invoice %s uploaded to Cloudinary for order %s",
+                    invoice_number,
+                    order.get("id"),
+                )
+                return invoice_number, url
+            except Exception as exc:
+                logger.warning(
+                    "Cloudinary upload failed for invoice %s, falling back to local: %s",
+                    invoice_number,
+                    exc,
+                )
+
+        # Fallback: write to local filesystem
         filename = f"{invoice_number}.pdf"
         file_path = INVOICE_DIR / filename
-
-        self._create_pdf(order, invoice_number, file_path)
-
-        # Return relative path for storage
+        file_path.write_bytes(pdf_bytes)
         relative_path = f"/uploads/invoices/{filename}"
-        logger.info("Generated invoice %s for order %s at %s", invoice_number, order.get("id"), relative_path)
-
+        logger.info(
+            "Invoice %s saved locally for order %s at %s",
+            invoice_number,
+            order.get("id"),
+            relative_path,
+        )
         return invoice_number, relative_path
 
-    def _create_pdf(self, order: dict, invoice_number: str, file_path: Path) -> None:
-        """Create the PDF invoice file."""
+    def _create_pdf_bytes(self, order: dict, invoice_number: str) -> bytes:
+        """Render the invoice as PDF and return the raw bytes."""
+        buf = io.BytesIO()
         doc = SimpleDocTemplate(
-            str(file_path),
+            buf,
             pagesize=A4,
             leftMargin=2 * cm,
             rightMargin=2 * cm,
@@ -170,24 +221,17 @@ class InvoiceService:
             fontName="Helvetica-Oblique",
             fontSize=9,
             textColor=GRAY_COLOR,
-            alignment=1,  # center
+            alignment=1,
         )
 
-        # Header section
+        # Header
         elements.append(
             Table(
-                [
-                    [
-                        Paragraph("Priya Sakshi", title_style),
-                        Paragraph(f"<b>INVOICE</b>", title_style),
-                    ]
-                ],
+                [[Paragraph("Priya Sakshi", title_style), Paragraph("<b>INVOICE</b>", title_style)]],
                 colWidths=[10 * cm, 8 * cm],
             )
         )
         elements.append(Spacer(1, 4 * mm))
-
-        # Store info
         elements.append(Paragraph("Kanchipuram, Tamil Nadu", header_style))
         elements.append(Paragraph("Email: hello@priyasakshi.com", header_style))
         elements.append(Paragraph("Phone: +91 98765 43210", header_style))
@@ -204,7 +248,7 @@ class InvoiceService:
         )
         elements.append(Spacer(1, 8 * mm))
 
-        # Invoice details and customer details side by side
+        # Invoice + customer details
         invoice_date = self._format_date(order.get("created_at", ""))
         invoice_data = [
             ["Invoice Number:", invoice_number],
@@ -213,10 +257,7 @@ class InvoiceService:
             ["Payment Method:", "Razorpay"],
             ["Payment Status:", "Paid"],
         ]
-        invoice_info_table = Table(
-            invoice_data,
-            colWidths=[3.5 * cm, 5 * cm],
-        )
+        invoice_info_table = Table(invoice_data, colWidths=[3.5 * cm, 5 * cm])
         invoice_info_table.setStyle(
             TableStyle(
                 [
@@ -230,7 +271,6 @@ class InvoiceService:
             )
         )
 
-        # Customer details
         shipping = order.get("shipping", {}) or {}
         customer_data = [
             ["Customer Details", ""],
@@ -245,10 +285,7 @@ class InvoiceService:
             ],
             [f"{shipping.get('country', 'India')}", ""],
         ]
-        customer_table = Table(
-            customer_data,
-            colWidths=[8 * cm],
-        )
+        customer_table = Table(customer_data, colWidths=[8 * cm])
         customer_table.setStyle(
             TableStyle(
                 [
@@ -264,11 +301,7 @@ class InvoiceService:
             )
         )
 
-        # Side by side layout
-        details_table = Table(
-            [[invoice_info_table, customer_table]],
-            colWidths=[9 * cm, 9 * cm],
-        )
+        details_table = Table([[invoice_info_table, customer_table]], colWidths=[9 * cm, 9 * cm])
         details_table.setStyle(
             TableStyle(
                 [
@@ -308,10 +341,7 @@ class InvoiceService:
                 ]
             )
 
-        products_table = Table(
-            table_data,
-            colWidths=[9 * cm, 2 * cm, 3.5 * cm, 3.5 * cm],
-        )
+        products_table = Table(table_data, colWidths=[9 * cm, 2 * cm, 3.5 * cm, 3.5 * cm])
         products_table.setStyle(
             TableStyle(
                 [
@@ -334,7 +364,7 @@ class InvoiceService:
         elements.append(products_table)
         elements.append(Spacer(1, 8 * mm))
 
-        # Summary section
+        # Summary
         subtotal = order.get("subtotal", 0) or 0
         shipping_fee = order.get("shipping_fee", 0) or 0
         total = order.get("total", 0) or 0
@@ -346,11 +376,7 @@ class InvoiceService:
             ["", ""],
             ["Grand Total:", self._format_inr(total)],
         ]
-
-        summary_table = Table(
-            summary_data,
-            colWidths=[13 * cm, 5 * cm],
-        )
+        summary_table = Table(summary_data, colWidths=[13 * cm, 5 * cm])
         summary_table.setStyle(
             TableStyle(
                 [
@@ -380,35 +406,36 @@ class InvoiceService:
             )
         )
         elements.append(Spacer(1, 4 * mm))
-        elements.append(
-            Paragraph("Thank you for shopping with Priya Sakshi.", footer_style)
-        )
-        elements.append(
-            Paragraph("We hope to see you again soon!", footer_style)
-        )
+        elements.append(Paragraph("Thank you for shopping with Priya Sakshi.", footer_style))
+        elements.append(Paragraph("We hope to see you again soon!", footer_style))
 
-        # Build PDF
         doc.build(elements)
-        logger.info("PDF invoice created at %s", file_path)
+        return buf.getvalue()
 
     def get_invoice_path(self, order: dict) -> Optional[tuple[str, str]]:
-        """Get the existing invoice path for an order.
+        """Return (invoice_number, path_or_url) for an existing invoice, or None.
 
-        Returns:
-            tuple: (invoice_number, file_path) or None if no invoice exists
+        When the stored path is a Cloudinary URL it is returned as-is.
+        For local paths the file must exist on disk.
         """
         invoice_number = order.get("invoice_number")
         invoice_file_path = order.get("invoice_file_path")
 
-        if invoice_number and invoice_file_path:
-            full_path = ROOT_DIR / invoice_file_path.lstrip("/")
-            if full_path.exists():
-                return invoice_number, str(full_path)
+        if not (invoice_number and invoice_file_path):
+            return None
+
+        # Cloudinary URL — always available
+        if invoice_file_path.startswith("http://") or invoice_file_path.startswith("https://"):
+            return invoice_number, invoice_file_path
+
+        # Local path
+        full_path = ROOT_DIR / invoice_file_path.lstrip("/")
+        if full_path.exists():
+            return invoice_number, str(full_path)
 
         return None
 
     def get_invoice_filename(self, order: dict) -> str:
-        """Get the invoice filename for an order."""
         invoice_number = order.get("invoice_number", "invoice")
         return f"{invoice_number}.pdf"
 

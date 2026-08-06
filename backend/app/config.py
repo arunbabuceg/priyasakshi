@@ -69,6 +69,11 @@ class Settings(BaseSettings):
         1, alias="PASSWORD_RESET_TOKEN_EXPIRE_HOURS"
     )
 
+    # ---- Cloudinary (persistent image / PDF storage) ----
+    cloudinary_cloud_name: str = Field("", alias="CLOUDINARY_CLOUD_NAME")
+    cloudinary_api_key: str = Field("", alias="CLOUDINARY_API_KEY")
+    cloudinary_api_secret: str = Field("", alias="CLOUDINARY_API_SECRET")
+
     # ---- Admin ----
     # Comma-separated allowlist of admin email addresses (lower-cased).
     admin_emails: str = Field(

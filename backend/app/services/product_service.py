@@ -35,6 +35,120 @@ def _generate_slug(name: str, existing_id: Optional[str] = None) -> str:
 
 
 class ProductService:
+    # Default products for seeding
+    DEFAULT_PRODUCTS = [
+        {
+            "name": "Silk Harmony Saree",
+            "slug": "silk-harmony-saree",
+            "category": "saree",
+            "short_description": "A beautiful handwoven silk saree with intricate zari work",
+            "long_description": "This exquisite silk saree is crafted by master artisans using traditional techniques passed down through generations. The rich silk fabric features intricate zari work that catches the light beautifully, making it perfect for weddings and special occasions.",
+            "price": 15999,
+            "compare_price": 19999,
+            "images": ["/images/products/silk-harmony-1.jpg"],
+            "tag": "Bestseller",
+            "stock": 25,
+            "specifications": [
+                {"label": "Fabric", "value": "Pure Silk"},
+                {"label": "Length", "value": "6.3 meters"},
+                {"label": "Blouse", "value": "Unstitched blouse piece included"},
+                {"label": "Work", "value": "Zari work"},
+            ],
+            "shipping_info": ["Free shipping on orders above ₹999", "Delivery within 5-7 business days"],
+            "featured": True,
+            "active": True,
+            "currency": "INR",
+        },
+        {
+            "name": "Rose Glow Serum",
+            "slug": "rose-glow-serum",
+            "category": "skincare",
+            "short_description": "Brightening serum with vitamin C and rose extracts",
+            "long_description": "Our Rose Glow Serum combines the power of stabilized vitamin C with organic rose extracts to deliver visible brightening and anti-aging benefits. The lightweight formula absorbs quickly and is suitable for all skin types.",
+            "price": 1299,
+            "compare_price": 1599,
+            "images": ["/images/products/rose-glow-1.jpg"],
+            "tag": "New",
+            "stock": 100,
+            "specifications": [
+                {"label": "Volume", "value": "30ml"},
+                {"label": "Skin Type", "value": "All skin types"},
+                {"label": "Key Ingredients", "value": "Vitamin C, Rose Extract, Hyaluronic Acid"},
+                {"label": "Cruelty Free", "value": "Yes"},
+            ],
+            "shipping_info": ["Free shipping on orders above ₹999", "Delivery within 3-5 business days"],
+            "featured": True,
+            "active": True,
+            "currency": "INR",
+        },
+        {
+            "name": "Cotton Breeze Saree",
+            "slug": "cotton-breeze-saree",
+            "category": "saree",
+            "short_description": "Lightweight cotton saree perfect for everyday wear",
+            "long_description": "Stay comfortable all day with our Cotton Breeze Saree. Made from premium quality cotton, this saree is perfect for both office and casual wear. The breathable fabric keeps you cool in warm weather.",
+            "price": 3499,
+            "compare_price": None,
+            "images": ["/images/products/cotton-breeze-1.jpg"],
+            "tag": None,
+            "stock": 50,
+            "specifications": [
+                {"label": "Fabric", "value": "Premium Cotton"},
+                {"label": "Length", "value": "6 meters"},
+                {"label": "Blouse", "value": "Unstitched blouse piece included"},
+                {"label": "Occasion", "value": "Daily wear, Office"},
+            ],
+            "shipping_info": ["Free shipping on orders above ₹999", "Delivery within 5-7 business days"],
+            "featured": False,
+            "active": True,
+            "currency": "INR",
+        },
+        {
+            "name": "Kumkumadi Facial Oil",
+            "slug": "kumkumadi-facial-oil",
+            "category": "skincare",
+            "short_description": "Traditional Ayurvedic facial oil for radiant skin",
+            "long_description": "Experience the ancient wisdom of Ayurveda with our Kumkumadi Facial Oil. This luxurious oil is formulated with 16 precious herbs including saffron, sandalwood, and turmeric to give you naturally radiant and glowing skin.",
+            "price": 1899,
+            "compare_price": 2299,
+            "images": ["/images/products/kumkumadi-1.jpg"],
+            "tag": "Premium",
+            "stock": 75,
+            "specifications": [
+                {"label": "Volume", "value": "50ml"},
+                {"label": "Skin Type", "value": "All skin types"},
+                {"label": "Key Ingredients", "value": "Saffron, Sandalwood, Turmeric, Sesame Oil"},
+                {"label": "Ayurvedic", "value": "100% Ayurvedic"},
+            ],
+            "shipping_info": ["Free shipping on orders above ₹999", "Delivery within 3-5 business days"],
+            "featured": True,
+            "active": True,
+            "currency": "INR",
+        },
+    ]
+
+    async def seed_if_empty(self) -> int:
+        """Seed products if the collection is empty. Returns number of products seeded."""
+        count = await get_db().products.count_documents({})
+        if count > 0:
+            logger.info("Products collection already has %d documents, skipping seed", count)
+            return 0
+        
+        now = _now()
+        for product_data in self.DEFAULT_PRODUCTS:
+            product = {
+                "_id": str(uuid.uuid4()),
+                "id": str(uuid.uuid4()),
+                **product_data,
+                "created_at": now,
+                "updated_at": now,
+                "deleted_at": None,
+            }
+            await get_db().products.insert_one(product)
+        
+        logger.info("Seeded %d default products", len(self.DEFAULT_PRODUCTS))
+        return len(self.DEFAULT_PRODUCTS)
+
     async def create(self, payload: ProductCreate) -> dict:
         """Create a new product."""
         now = _now()

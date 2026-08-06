@@ -131,6 +131,8 @@ class ProductService:
         """Seed products if the collection is empty. Returns number of products seeded."""
         count = await get_db().products.count_documents({})
         if count > 0:
+            # Fix old image paths: /images/products/ -> /uploads/products/
+            await self._fix_old_image_paths()
             logger.info("Products collection already has %d documents, skipping seed", count)
             return 0
         
@@ -148,6 +150,34 @@ class ProductService:
         
         logger.info("Seeded %d default products", len(self.DEFAULT_PRODUCTS))
         return len(self.DEFAULT_PRODUCTS)
+
+    async def _fix_old_image_paths(self) -> int:
+        """Fix image paths for products that have old /images/products/ paths.
+        
+        Old path: /images/products/filename.jpg
+        Correct path: /uploads/products/filename.jpg
+        """
+        db = get_db()
+        # Find products with old image paths
+        old_path_prefix = "/images/products/"
+        updated_count = 0
+        
+        async for product in db.products.find({"images": {"$regex": "^" + old_path_prefix}}):
+            new_images = [
+                img.replace("/images/products/", "/uploads/products/")
+                for img in product.get("images", [])
+            ]
+            if new_images != product.get("images"):
+                await db.products.update_one(
+                    {"_id": product["_id"]},
+                    {"$set": {"images": new_images, "updated_at": _now()}}
+                )
+                updated_count += 1
+                logger.info("Fixed image paths for product: %s", product.get("name"))
+        
+        if updated_count > 0:
+            logger.info("Fixed image paths for %d products", updated_count)
+        return updated_count
 
     async def create(self, payload: ProductCreate) -> dict:
         """Create a new product."""

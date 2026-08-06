@@ -155,5 +155,19 @@ def test_product_model_categories():
         pass  # Expected
 
 
+def test_seeded_products_have_valid_image_paths():
+    """Test that seeded products have image paths that match the uploads directory."""
+    from app.services.product_service import ProductService
+    
+    for product in ProductService.DEFAULT_PRODUCTS:
+        assert "images" in product, f"Product {product['name']} should have images field"
+        images = product["images"]
+        assert isinstance(images, list), "Images should be a list"
+        for img in images:
+            # Images should use /uploads/products/ path to match StaticFiles mount
+            assert img.startswith("/uploads/products/"), \
+                f"Image path '{img}' should start with /uploads/products/"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

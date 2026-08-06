@@ -45,7 +45,7 @@ class ProductService:
             "long_description": "This exquisite silk saree is crafted by master artisans using traditional techniques passed down through generations. The rich silk fabric features intricate zari work that catches the light beautifully, making it perfect for weddings and special occasions.",
             "price": 15999,
             "compare_price": 19999,
-            "images": ["/images/products/silk-harmony-1.jpg"],
+            "images": ["/uploads/products/silk-harmony-1.jpg"],
             "tag": "Bestseller",
             "stock": 25,
             "specifications": [
@@ -67,7 +67,7 @@ class ProductService:
             "long_description": "Our Rose Glow Serum combines the power of stabilized vitamin C with organic rose extracts to deliver visible brightening and anti-aging benefits. The lightweight formula absorbs quickly and is suitable for all skin types.",
             "price": 1299,
             "compare_price": 1599,
-            "images": ["/images/products/rose-glow-1.jpg"],
+            "images": ["/uploads/products/rose-glow-1.jpg"],
             "tag": "New",
             "stock": 100,
             "specifications": [
@@ -89,7 +89,7 @@ class ProductService:
             "long_description": "Stay comfortable all day with our Cotton Breeze Saree. Made from premium quality cotton, this saree is perfect for both office and casual wear. The breathable fabric keeps you cool in warm weather.",
             "price": 3499,
             "compare_price": None,
-            "images": ["/images/products/cotton-breeze-1.jpg"],
+            "images": ["/uploads/products/cotton-breeze-1.jpg"],
             "tag": None,
             "stock": 50,
             "specifications": [
@@ -111,7 +111,7 @@ class ProductService:
             "long_description": "Experience the ancient wisdom of Ayurveda with our Kumkumadi Facial Oil. This luxurious oil is formulated with 16 precious herbs including saffron, sandalwood, and turmeric to give you naturally radiant and glowing skin.",
             "price": 1899,
             "compare_price": 2299,
-            "images": ["/images/products/kumkumadi-1.jpg"],
+            "images": ["/uploads/products/kumkumadi-1.jpg"],
             "tag": "Premium",
             "stock": 75,
             "specifications": [

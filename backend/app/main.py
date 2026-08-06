@@ -109,8 +109,9 @@ def create_app() -> FastAPI:
 
     # ---- Static files (uploads) ----
     upload_dir = ROOT_DIR / "uploads"
-    if upload_dir.exists():
-        app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    (upload_dir / "products").mkdir(parents=True, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
 
     return app
 

@@ -20,6 +20,7 @@ from .config import settings, ROOT_DIR
 from .db import close_db, get_db
 from .routes import addresses, admin, auth, contact, health, newsletter, orders, payments, profile, products
 from .services.order_service import order_service
+from .services.product_service import product_service
 
 # How often the unpaid-order sweeper runs.
 PAYMENT_SWEEP_INTERVAL_SECONDS = 15 * 60
@@ -51,6 +52,14 @@ async def lifespan(_: FastAPI):
         logger.info("Connected to MongoDB (db=%s)", settings.db_name)
     except Exception as exc:  # pragma: no cover - infra failure path
         logger.warning("MongoDB ping failed at startup: %s", exc)
+
+    # Seed products if collection is empty
+    try:
+        seeded = await product_service.seed_if_empty()
+        if seeded > 0:
+            logger.info("Seeded %d default products", seeded)
+    except Exception as exc:  # pragma: no cover - infra failure path
+        logger.warning("Product seeding failed at startup: %s", exc)
 
     sweeper = asyncio.create_task(_payment_expiry_sweeper())
     yield

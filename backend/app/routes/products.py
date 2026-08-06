@@ -27,6 +27,7 @@ from typing import Optional
 from ..dependencies import get_admin_user, get_current_user
 from ..models.product import ProductCreate, ProductUpdate, ProductResponse
 from ..services.product_service import product_service
+from ..config import ROOT_DIR
 
 router = APIRouter()
 
@@ -93,123 +94,113 @@ async def get_product(product_id: str, admin=Depends(get_admin_user)):
 
 
 @admin_router.post("")
-async def create_product(admin=Depends(get_admin_user)):
+async def create_product(request: Request, admin=Depends(get_admin_user)):
     """Create a new product (admin only).
     
     Accepts JSON body with product data.
     """
-    # Note: We read raw body to handle optional fields properly
-    from fastapi import Request
-    async def _create(request: Request):
-        try:
-            body = await request.json()
-        except Exception:
-            raise HTTPException(status_code=400, detail="Invalid JSON body")
-        
-        # Parse specifications if provided
-        specifications = []
-        if "specifications" in body:
-            from ..models.product import Specification
-            specs_data = body.pop("specifications")
-            if isinstance(specs_data, list):
-                for s in specs_data:
-                    if isinstance(s, dict) and "label" in s and "value" in s:
-                        specifications.append(Specification(label=s["label"], value=s["value"]))
-        
-        try:
-            payload = ProductCreate(
-                name=body.get("name", ""),
-                slug=body.get("slug", ""),
-                category=body.get("category", ""),
-                short_description=body.get("shortDescription", ""),
-                long_description=body.get("longDescription", ""),
-                price=body.get("price", 0),
-                compare_price=body.get("comparePrice"),
-                images=body.get("images", []),
-                tag=body.get("tag"),
-                stock=body.get("stock", 0),
-                specifications=specifications,
-                shipping_info=body.get("shippingInfo", []),
-                featured=body.get("featured", False),
-                active=body.get("active", True),
-            )
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
-        
-        try:
-            product = await product_service.create(payload)
-            return {"ok": True, "product": product}
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
     
-    return _create
+    # Parse specifications if provided
+    specifications = []
+    if "specifications" in body:
+        from ..models.product import Specification
+        specs_data = body.pop("specifications")
+        if isinstance(specs_data, list):
+            for s in specs_data:
+                if isinstance(s, dict) and "label" in s and "value" in s:
+                    specifications.append(Specification(label=s["label"], value=s["value"]))
+    
+    try:
+        payload = ProductCreate(
+            name=body.get("name", ""),
+            slug=body.get("slug", ""),
+            category=body.get("category", ""),
+            short_description=body.get("shortDescription", ""),
+            long_description=body.get("longDescription", ""),
+            price=body.get("price", 0),
+            compare_price=body.get("comparePrice"),
+            images=body.get("images", []),
+            tag=body.get("tag"),
+            stock=body.get("stock", 0),
+            specifications=specifications,
+            shipping_info=body.get("shippingInfo", []),
+            featured=body.get("featured", False),
+            active=body.get("active", True),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    try:
+        product = await product_service.create(payload)
+        return {"ok": True, "product": product}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @admin_router.patch("/{product_id}")
-async def update_product(product_id: str, admin=Depends(get_admin_user)):
+async def update_product(product_id: str, request: Request, admin=Depends(get_admin_user)):
     """Update an existing product (admin only)."""
-    from fastapi import Request
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
     
-    async def _update(request: Request):
-        try:
-            body = await request.json()
-        except Exception:
-            raise HTTPException(status_code=400, detail="Invalid JSON body")
-        
-        # Check if product exists
-        existing = await product_service.get_by_id(product_id, include_deleted=True)
-        if not existing:
-            raise HTTPException(status_code=404, detail="Product not found")
-        
-        # Parse specifications if provided
-        specifications = None
-        if "specifications" in body:
-            from ..models.product import Specification
-            specs_data = body.pop("specifications")
-            if isinstance(specs_data, list):
-                specifications = []
-                for s in specs_data:
-                    if isinstance(s, dict) and "label" in s and "value" in s:
-                        specifications.append(Specification(label=s["label"], value=s["value"]))
-        
-        # Build update payload with camelCase field names
-        update_data = {}
-        field_mapping = {
-            "name": "name",
-            "slug": "slug",
-            "category": "category",
-            "shortDescription": "short_description",
-            "longDescription": "long_description",
-            "price": "price",
-            "comparePrice": "compare_price",
-            "images": "images",
-            "tag": "tag",
-            "stock": "stock",
-            "specifications": "specifications",
-            "shippingInfo": "shipping_info",
-            "featured": "featured",
-            "active": "active",
-        }
-        
-        for camel, value in body.items():
-            if camel in field_mapping:
-                update_data[field_mapping[camel]] = value
-        
-        if specifications is not None:
-            update_data["specifications"] = specifications
-        
-        try:
-            payload = ProductUpdate(**update_data)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
-        
-        try:
-            product = await product_service.update(product_id, payload)
-            return {"ok": True, "product": product}
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+    # Check if product exists
+    existing = await product_service.get_by_id(product_id, include_deleted=True)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Product not found")
     
-    return _update
+    # Parse specifications if provided
+    specifications = None
+    if "specifications" in body:
+        from ..models.product import Specification
+        specs_data = body.pop("specifications")
+        if isinstance(specs_data, list):
+            specifications = []
+            for s in specs_data:
+                if isinstance(s, dict) and "label" in s and "value" in s:
+                    specifications.append(Specification(label=s["label"], value=s["value"]))
+    
+    # Build update payload with camelCase field names
+    update_data = {}
+    field_mapping = {
+        "name": "name",
+        "slug": "slug",
+        "category": "category",
+        "shortDescription": "short_description",
+        "longDescription": "long_description",
+        "price": "price",
+        "comparePrice": "compare_price",
+        "images": "images",
+        "tag": "tag",
+        "stock": "stock",
+        "specifications": "specifications",
+        "shippingInfo": "shipping_info",
+        "featured": "featured",
+        "active": "active",
+    }
+    
+    for camel, value in body.items():
+        if camel in field_mapping:
+            update_data[field_mapping[camel]] = value
+    
+    if specifications is not None:
+        update_data["specifications"] = specifications
+    
+    try:
+        payload = ProductUpdate(**update_data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    try:
+        product = await product_service.update(product_id, payload)
+        return {"ok": True, "product": product}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @admin_router.delete("/{product_id}")
@@ -275,9 +266,9 @@ async def upload_product_image(
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     filename = f"{uuid.uuid4()}.{ext}"
     
-    # Create uploads directory if it doesn't exist
-    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads", "products")
-    os.makedirs(upload_dir, exist_ok=True)
+    # Create uploads directory if it doesn't exist (matches StaticFiles mount in main.py)
+    upload_dir = ROOT_DIR / "uploads" / "products"
+    upload_dir.mkdir(parents=True, exist_ok=True)
     
     # Write file
     filepath = os.path.join(upload_dir, filename)

@@ -1,0 +1,83 @@
+name: Dependabot Auto-Merge
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    # Only run for Dependabot PRs
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Wait for required status checks
+        uses: actions/github-script@v7
+        id: wait_for_status
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const maxWaitTime = 20 * 60 * 1000; // 20 minutes
+            const pollInterval = 30 * 1000; // 30 seconds
+            
+            const startTime = Date.now();
+            
+            while (Date.now() - startTime < maxWaitTime) {
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+              
+              // Get combined status for the PR
+              const { data: combinedStatus } = await github.rest.repos.getCombinedStatusForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: pr.head.sha
+              });
+              
+              console.log(`Status: ${combinedStatus.state}, Mergeable: ${pr.mergeable}`);
+              
+              // If all checks passed and PR is mergeable
+              if (combinedStatus.state === 'success' && pr.mergeable === true) {
+                console.log('All checks passed, PR is mergeable!');
+                return true;
+              }
+              
+              // If checks failed
+              if (combinedStatus.state === 'failure') {
+                console.log('Some checks failed');
+                return false;
+              }
+              
+              await new Promise(resolve => setTimeout(resolve, pollInterval));
+            }
+            
+            console.log('Timeout waiting for checks');
+            return false;
+
+      - name: Auto-merge Dependabot PR
+        if: steps.wait_for_status.outputs.result == 'true'
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} --admin --merge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on PR if checks failed
+        if: steps.wait_for_status.outputs.result == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: '⚠️ Auto-merge skipped: some status checks failed or timed out. Please review and merge manually if appropriate.'
+            });

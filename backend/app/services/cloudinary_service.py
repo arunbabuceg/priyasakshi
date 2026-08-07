@@ -75,13 +75,13 @@ def _upload_pdf_sync(pdf_bytes: bytes, public_id: str) -> str:
 
 async def upload_image(file_bytes: bytes, public_id: Optional[str] = None) -> str:
     """Upload image bytes to Cloudinary asynchronously. Returns secure URL."""
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _upload_image_sync, file_bytes, public_id)
 
 
 async def upload_pdf(pdf_bytes: bytes, public_id: str) -> str:
     """Upload PDF bytes to Cloudinary asynchronously. Returns secure URL."""
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _upload_pdf_sync, pdf_bytes, public_id)
 
 

@@ -31,6 +31,9 @@ from ..config import ROOT_DIR
 
 router = APIRouter()
 
+import logging
+logger = logging.getLogger("priya_sakshi.products")
+
 # ---------- Public endpoints ----------
 
 @router.get("/products")
@@ -263,18 +266,22 @@ async def upload_product_image(
     from ..services import cloudinary_service
 
     if cloudinary_service.is_configured():
-        # Upload to Cloudinary — URL survives redeploys
+        # Upload to Cloudinary — URL survives redeploys.
+        # When Cloudinary is configured we NEVER fall back to local storage;
+        # a failure must surface as an error, not a silently-broken image.
         try:
             image_url = await cloudinary_service.upload_image(content)
+            logger.info("Uploaded image to Cloudinary")
             filename = image_url.rsplit("/", 1)[-1]
             return {"ok": True, "url": image_url, "filename": filename}
-        except Exception as exc:
-            import logging
-            logging.getLogger("priya_sakshi.products").warning(
-                "Cloudinary upload failed, falling back to local: %s", exc
+        except Exception:
+            logger.exception("Cloudinary image upload failed")
+            raise HTTPException(
+                status_code=500,
+                detail="Image upload failed. Please try again.",
             )
 
-    # Fallback: local filesystem (development / no Cloudinary)
+    # Fallback: local filesystem (development only — Cloudinary not configured)
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     filename = f"{uuid.uuid4()}.{ext}"
     upload_dir = ROOT_DIR / "uploads" / "products"

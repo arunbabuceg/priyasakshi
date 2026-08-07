@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ShoppingBag } from 'lucide-react';
 import { ClayShapes } from '@/components/ClayShapes';
 
+
 /**
  * CancelPage — kept for future payment-provider integration. Currently
  * displays the same friendly "coming soon" copy since payments are disabled.

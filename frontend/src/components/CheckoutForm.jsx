@@ -132,7 +132,7 @@ export default function CheckoutForm({ onBack }) {
     });
 
     if (!orderResult.ok) {
-      toast.error(orderResult.error || 'Could not place order');
+      navigate(`/payment-failed?reason=${encodeURIComponent(orderResult.error || 'Could not place order')}`);
       setSubmitting(false);
       return;
     }
@@ -170,45 +170,20 @@ export default function CheckoutForm({ onBack }) {
         razorpayPaymentId: paymentHandle.razorpayPaymentId,
         razorpaySignature: paymentHandle.razorpaySignature,
       });
-
-      if (verifyResult.ok && verifyResult.data?.success) {
-        // 5. Verified success — clear the basket and redirect.
-        clear();
-        setIsOpen(false);
-        navigate('/success');
-        return;
+      if (!verifyResult.ok || !verifyResult.data?.success) {
+        throw new Error(verifyResult.error || 'Payment verification failed');
       }
 
-      // Razorpay collected the money but we could not confirm it with the
-      // server. When the failure is a network/CORS error (no response), we
-      // preserve the basket and route to a pending page so the shopper can
-      // retry confirmation once reconnected. A hard verification rejection
-      // routes to the failure page. The cart is never cleared here.
-      if (verifyResult.retryable) {
-        navigate('/payment-pending', {
-          state: {
-            orderId: internalOrderId,
-            razorpayOrderId: paymentHandle.razorpayOrderId,
-            razorpayPaymentId: paymentHandle.razorpayPaymentId,
-            razorpaySignature: paymentHandle.razorpaySignature,
-          },
-        });
-        return;
-      }
-
-      navigate('/payment-failure', {
-        state: { reason: verifyResult.error || 'Payment verification failed.' },
-      });
+      // 5. Success — clear the basket and redirect.
+      clear();
+      setIsOpen(false);
+      navigate('/success');
     } catch (paymentErr) {
-      // Razorpay modal dismissed or checkout failed — basket preserved so
-      // the shopper can retry without rebuilding their order.
-      if (paymentErr?.message === 'Payment cancelled') {
-        toast('Payment cancelled — your basket is still saved.');
-      } else {
-        navigate('/payment-failure', {
-          state: { reason: paymentErr?.message || PAYMENT_ERROR_MESSAGE },
-        });
-      }
+      const message = paymentErr?.message || PAYMENT_ERROR_MESSAGE;
+      // Keep the cart on failed/cancelled payments so the customer can retry.
+      // The result page explicitly warns that a network/verification error may
+      // require checking payment status before trying again.
+      navigate(`/payment-failed?reason=${encodeURIComponent(message)}`);
     } finally {
       setSubmitting(false);
     }

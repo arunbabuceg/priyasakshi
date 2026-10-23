@@ -139,4 +139,8 @@ async def verify_payment(payload: VerifyPaymentRequest):
                     payload.order_id,
                 )
 
-    return VerifyPaymentResponse(success=True)
+    return VerifyPaymentResponse(
+    success=True,
+    order_id=payload.order_id,
+    message="Payment verified and order confirmed successfully",
+)

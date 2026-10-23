@@ -81,13 +81,14 @@ def create_app() -> FastAPI:
     )
 
     # ---- CORS ----
+    # Origins are driven by the CORS_ORIGINS env var (comma-separated). Using
+    # the wildcard form disables credentials (handled in config.allow_credentials)
+    # so that any deployed frontend origin — production domain, Vercel preview,
+    # local dev — can reach the API without editing code here.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "https://www.priyasakshi.com",
-            "https://priyasakshi.com",
-        ],
-        allow_credentials=True,
+        allow_origins=settings.cors_origins_list,
+        allow_credentials=settings.allow_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
     )

@@ -17,7 +17,7 @@ export const site = {
 },
   shipping: {
     currency: 'INR',
-    freeShippingThreshold: 5000,
-    flatFee: 99,
+    freeShippingThreshold: 0,
+    flatFee: 0,
   },
 };

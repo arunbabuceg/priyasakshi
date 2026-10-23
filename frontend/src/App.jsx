@@ -9,6 +9,8 @@ import ResetPasswordPage from '@/pages/ResetPasswordPage.jsx';
 import VerifyEmailPage from '@/pages/VerifyEmailPage.jsx';
 import SuccessPage from '@/pages/SuccessPage.jsx';
 import CancelPage from '@/pages/CancelPage.jsx';
+import PaymentFailurePage from '@/pages/PaymentFailurePage.jsx';
+import PaymentPendingPage from '@/pages/PaymentPendingPage.jsx';
 import DashboardPage from '@/pages/DashboardPage.jsx';
 import MyOrdersPage from '@/pages/MyOrdersPage.jsx';
 import OrderDetailsPage from '@/pages/OrderDetailsPage.jsx';
@@ -41,6 +43,8 @@ export default function App() {
             <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/success" element={<SuccessPage />} />
             <Route path="/cancel" element={<CancelPage />} />
+            <Route path="/payment-failure" element={<PaymentFailurePage />} />
+            <Route path="/payment-pending" element={<PaymentPendingPage />} />
             <Route path="/account" element={<DashboardPage />} />
             <Route path="/account/orders" element={<MyOrdersPage />} />
             <Route path="/account/orders/:orderId" element={<OrderDetailsPage />} />

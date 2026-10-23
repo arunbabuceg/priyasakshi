@@ -33,7 +33,13 @@ export const createRazorpayOrder = async ({ orderId, amount, currency = 'INR' })
   }
 };
 
-/** Verifies a completed Razorpay Standard Checkout payment against the backend. */
+/**
+ * Verifies a completed Razorpay Standard Checkout payment against the backend.
+ *
+ * A network failure (no response from the server) is reported as `retryable`
+ * so the caller can preserve the cart and offer a retry. A real rejection from
+ * the server (signature mismatch etc.) is a hard failure — `retryable: false`.
+ */
 export const verifyPayment = async ({
   orderId,
   razorpayOrderId,
@@ -49,7 +55,9 @@ export const verifyPayment = async ({
     });
     return { ok: true, data };
   } catch (err) {
-    return { ok: false, error: getErrorMessage(err, 'Payment verification failed') };
+    const message = getErrorMessage(err, 'Payment verification failed');
+    const retryable = !err?.response; // no response = network/CORS error, not a verification rejection
+    return { ok: false, error: message, retryable };
   }
 };
 

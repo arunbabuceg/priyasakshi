@@ -1,17 +1,17 @@
+
 """Razorpay payment routes.
 
-- POST /api/create-order    → creates a Razorpay order for an existing
-  internal order (from POST /api/orders) and returns what the frontend
-  needs to open Razorpay Standard Checkout.
-- POST /api/verify-payment  → verifies the HMAC-SHA256 signature Razorpay
-  returns after a successful checkout and marks the order as paid.
+- POST /api/create-order creates a Razorpay order for an existing
+  internal order.
+- POST /api/verify-payment verifies the Razorpay signature and marks
+  the internal order as paid.
 """
 
 from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from ..models.payment import (
     CreateRazorpayOrderRequest,
@@ -28,9 +28,70 @@ router = APIRouter(tags=["payments"])
 logger = logging.getLogger("priya_sakshi.payments")
 
 
-@router.post("/create-order", response_model=CreateRazorpayOrderResponse)
+async def send_payment_emails(order: dict, order_id: str) -> None:
+    """Send notifications after the payment response can be returned."""
+
+    try:
+        await email_service.send_owner_order_notification(order)
+        logger.info("Owner email sent for order_id=%s", order_id)
+    except Exception:
+        logger.exception(
+            "Failed to send owner notification for order_id=%s",
+            order_id,
+        )
+
+    try:
+        await email_service.send_order_confirmation(order)
+        logger.info("Customer confirmation email sent for order_id=%s", order_id)
+    except Exception:
+        logger.exception(
+            "Failed to send customer confirmation for order_id=%s",
+            order_id,
+        )
+
+    if not order.get("invoice_number"):
+        return
+
+    try:
+        invoice_path = invoice_service.get_invoice_path(order)
+
+        if not invoice_path:
+            logger.warning(
+                "Invoice path unavailable for order_id=%s",
+                order_id,
+            )
+            return
+
+        _, full_path = invoice_path
+
+        if not full_path:
+            logger.warning(
+                "Invoice file unavailable for order_id=%s",
+                order_id,
+            )
+            return
+
+        await email_service.send_invoice_email(
+            order,
+            full_path,
+            order["invoice_number"],
+        )
+        logger.info("Invoice email sent for order_id=%s", order_id)
+
+    except Exception:
+        logger.exception(
+            "Failed to send invoice email for order_id=%s",
+            order_id,
+        )
+
+
+@router.post(
+    "/create-order",
+    response_model=CreateRazorpayOrderResponse,
+)
 async def create_order(payload: CreateRazorpayOrderRequest):
     order = await order_service.get_order(payload.order_id)
+
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
@@ -41,15 +102,18 @@ async def create_order(payload: CreateRazorpayOrderRequest):
             receipt=payload.order_id,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except Exception as exc:  # pragma: no cover
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+    except Exception as exc:
         logger.exception(
             "Razorpay order creation failed for order_id=%s",
             payload.order_id,
         )
         raise HTTPException(
             status_code=502,
-            detail=f"{type(exc).__name__}: {exc}",
+            detail="Unable to create payment order",
         ) from exc
 
     await order_service.mark_payment_initiated(
@@ -64,9 +128,16 @@ async def create_order(payload: CreateRazorpayOrderRequest):
     )
 
 
-@router.post("/verify-payment", response_model=VerifyPaymentResponse)
-async def verify_payment(payload: VerifyPaymentRequest):
+@router.post(
+    "/verify-payment",
+    response_model=VerifyPaymentResponse,
+)
+async def verify_payment(
+    payload: VerifyPaymentRequest,
+    background_tasks: BackgroundTasks,
+):
     order = await order_service.get_order(payload.order_id)
+
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
@@ -78,11 +149,14 @@ async def verify_payment(payload: VerifyPaymentRequest):
 
     if not is_valid:
         await order_service.mark_payment_failed(payload.order_id)
+
         logger.warning(
-            "Razorpay signature verification failed for order_id=%s razorpay_order_id=%s",
+            "Razorpay signature verification failed for order_id=%s "
+            "razorpay_order_id=%s",
             payload.order_id,
             payload.razorpay_order_id,
         )
+
         raise HTTPException(
             status_code=400,
             detail="Payment verification failed",
@@ -94,53 +168,21 @@ async def verify_payment(payload: VerifyPaymentRequest):
         razorpay_payment_id=payload.razorpay_payment_id,
     )
 
-    logger.info("Payment verified")
+    logger.info(
+        "Payment verified for order_id=%s",
+        payload.order_id,
+    )
 
-    # Step 1: Send owner order notification
-    try:
-        await email_service.send_owner_order_notification(order)
-        logger.info("Owner email sent")
-    except Exception:
-        logger.exception(
-            "Failed to send owner order notification for order_id=%s",
-            payload.order_id,
-        )
-
-    # Step 2: Send order confirmation
-    try:
-        await email_service.send_order_confirmation(order)
-        logger.info("Customer email sent")
-    except Exception:
-        logger.exception(
-            "Failed to send order confirmation for order_id=%s",
-            payload.order_id,
-        )
-
-    # Step 3 & 4: Get invoice path and send invoice email
-    if order.get("invoice_number") and order.get("invoice_file_path"):
-        invoice_path = None
-        try:
-            invoice_path = invoice_service.get_invoice_path(order)
-            logger.info("Invoice path resolved")
-        except Exception:
-            logger.exception(
-                "Failed to get invoice path for order_id=%s",
-                payload.order_id,
-            )
-
-        if invoice_path:
-            try:
-                _, full_path = invoice_path
-                await email_service.send_invoice_email(order, full_path, order["invoice_number"])
-                logger.info("Invoice email sent")
-            except Exception:
-                logger.exception(
-                    "Failed to send invoice email for order_id=%s",
-                    payload.order_id,
-                )
+    # Schedule notifications after the response is prepared.
+    # Email errors must not turn a verified payment into an HTTP 500.
+    background_tasks.add_task(
+        send_payment_emails,
+        order,
+        payload.order_id,
+    )
 
     return VerifyPaymentResponse(
-    success=True,
-    order_id=payload.order_id,
-    message="Payment verified and order confirmed successfully",
-)
+        success=True,
+        order_id=payload.order_id,
+        message="Payment verified and order confirmed successfully",
+    )
